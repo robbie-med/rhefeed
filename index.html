@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Refeeding Syndrome One-Stop (Static)</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <h1>Refeeding Syndrome One-Stop</h1>
+    <p class="subtle">Static, offline-capable risk + guidance. Educational; not a substitute for clinical judgment.</p>
+  </div>
+  <div class="topbar-actions">
+    <button id="btnNew" class="btn secondary">New patient</button>
+    <button id="btnPrint" class="btn secondary">Print / PDF</button>
+    <button id="btnExport" class="btn secondary">Export JSON</button>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card">
+    <h2>Mode</h2>
+    <div class="grid2">
+      <label class="required">
+        Patient type
+        <select id="patientType" required>
+          <option value="adult" selected>Adult</option>
+          <option value="peds">Pediatrics</option>
+        </select>
+      </label>
+
+      <label class="optional">
+        Setting
+        <select id="setting">
+          <option value="floor" selected>Floor / Ward</option>
+          <option value="icu">ICU</option>
+          <option value="ed">ED</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Anthropometrics & intake</h2>
+
+    <div class="grid3">
+      <label class="required">
+        Weight
+        <div class="inline">
+          <input id="weight" type="number" step="0.1" inputmode="decimal" placeholder="e.g., 56.7" required />
+          <select id="weightUnit">
+            <option value="kg" selected>kg</option>
+            <option value="lb">lb</option>
+          </select>
+        </div>
+      </label>
+
+      <label class="required">
+        Height
+        <div class="inline">
+          <input id="height" type="number" step="0.1" inputmode="decimal" placeholder="e.g., 170" required />
+          <select id="heightUnit">
+            <option value="cm" selected>cm</option>
+            <option value="in">in</option>
+          </select>
+        </div>
+      </label>
+
+      <label class="optional">
+        Usual weight (for % loss)
+        <div class="inline">
+          <input id="usualWeight" type="number" step="0.1" inputmode="decimal" placeholder="optional" />
+          <select id="usualWeightUnit">
+            <option value="kg" selected>kg</option>
+            <option value="lb">lb</option>
+          </select>
+        </div>
+      </label>
+    </div>
+
+    <div class="grid3">
+      <label class="required">
+        Days with little/no intake
+        <input id="daysNoIntake" type="number" step="1" inputmode="numeric" placeholder="e.g., 7" required />
+      </label>
+
+      <label class="optional">
+        Intake estimate (last few days)
+        <select id="intakeBand">
+          <option value="">(optional)</option>
+          <option value="none">Near zero</option>
+          <option value="lt50">&lt;50% needs</option>
+          <option value="lt25">&lt;25% needs</option>
+          <option value="lt500">&lt;500 kcal/day (adult heuristic)</option>
+        </select>
+      </label>
+
+      <label class="optional">
+        Unintentional weight loss time window
+        <select id="wtLossWindow">
+          <option value="">(optional)</option>
+          <option value="3mo">~3 months</option>
+          <option value="6mo">~6 months</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Labs (baseline & current)</h2>
+    <p class="subtle">Minimum required: baseline P/K/Mg + current P. Add current K/Mg if available for ASPEN severity across electrolytes.</p>
+
+    <div class="grid3">
+      <label class="required">
+        Baseline phosphate
+        <div class="inline">
+          <input id="phosBase" type="number" step="0.01" inputmode="decimal" required />
+          <select id="phosUnit">
+            <option value="mmolL" selected>mmol/L</option>
+            <option value="mgdL">mg/dL</option>
+          </select>
+        </div>
+      </label>
+
+      <label class="required">
+        Current phosphate
+        <div class="inline">
+          <input id="phosNow" type="number" step="0.01" inputmode="decimal" required />
+          <select id="phosUnitNow">
+            <option value="mmolL" selected>mmol/L</option>
+            <option value="mgdL">mg/dL</option>
+          </select>
+        </div>
+      </label>
+
+      <label class="required">
+        Baseline potassium (mmol/L)
+        <input id="kBase" type="number" step="0.01" inputmode="decimal" required />
+      </label>
+    </div>
+
+    <div class="grid3">
+      <label class="required">
+        Baseline magnesium (mmol/L)
+        <input id="mgBase" type="number" step="0.01" inputmode="decimal" required />
+      </label>
+
+      <label class="optional">
+        Current potassium (mmol/L)
+        <input id="kNow" type="number" step="0.01" inputmode="decimal" />
+      </label>
+
+      <label class="optional">
+        Current magnesium (mmol/L)
+        <input id="mgNow" type="number" step="0.01" inputmode="decimal" />
+      </label>
+    </div>
+
+    <div class="grid3">
+      <label class="optional">
+        Albumin (g/L)
+        <input id="albumin" type="number" step="1" inputmode="numeric" />
+      </label>
+
+      <label class="optional">
+        Prealbumin (mg/L)
+        <input id="prealbumin" type="number" step="1" inputmode="numeric" />
+      </label>
+
+      <label class="optional">
+        Lactate (mmol/L)
+        <input id="lactate" type="number" step="0.1" inputmode="decimal" />
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Clinical / meds / context</h2>
+
+    <div class="grid3">
+      <label class="optional"><span>Alcohol misuse</span><input id="rfAlcohol" type="checkbox" /></label>
+      <label class="optional"><span>Diuretics</span><input id="rfDiuretics" type="checkbox" /></label>
+      <label class="optional"><span>Insulin use</span><input id="rfInsulin" type="checkbox" /></label>
+
+      <label class="optional"><span>Chemo (recent)</span><input id="rfChemo" type="checkbox" /></label>
+      <label class="optional"><span>Antacids (significant)</span><input id="rfAntacids" type="checkbox" /></label>
+      <label class="optional"><span>Eating disorder / starvation</span><input id="rfStarvation" type="checkbox" /></label>
+
+      <label class="optional"><span>Vomiting</span><input id="rfVomiting" type="checkbox" /></label>
+      <label class="optional"><span>Peripheral edema / fluid overload</span><input id="rfEdema" type="checkbox" /></label>
+      <label class="optional"><span>Life-threatening systemic disease</span><input id="rfSystemic" type="checkbox" /></label>
+    </div>
+
+    <div class="grid3">
+      <label class="optional">
+        APACHE II (adult ICU)
+        <input id="apache" type="number" step="1" inputmode="numeric" />
+      </label>
+
+      <label class="optional">
+        SOFA (optional)
+        <input id="sofa" type="number" step="1" inputmode="numeric" />
+      </label>
+
+      <label class="optional">
+        GCS
+        <input id="gcs" type="number" step="1" inputmode="numeric" />
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Run</h2>
+    <div class="actions">
+      <button id="btnCalc" class="btn primary">Calculate & generate plan</button>
+      <span id="status" class="status"></span>
+    </div>
+  </section>
+
+  <section class="card" id="resultsCard">
+    <h2>Results</h2>
+    <div id="results"></div>
+
+    <div class="divider"></div>
+
+    <h2>Management guidance</h2>
+    <div id="plan"></div>
+
+    <div class="divider"></div>
+
+    <h2>EMR copy block</h2>
+    <p class="subtle">ASCII-only. Click to copy.</p>
+    <pre id="emrBlock" class="copybox" tabindex="0"></pre>
+    <button id="btnCopy" class="btn secondary">Copy block</button>
+  </section>
+
+  <section class="card">
+    <h2>References</h2>
+    <div id="refs" class="refs"></div>
+  </section>
+
+  <section class="card subtlebox">
+    <h2>Disclaimer</h2>
+    <p>
+      This tool provides educational decision support only. It does not replace local protocols, pharmacy guidance,
+      nutrition support teams, or clinician judgment. Always individualize dosing, repletion, fluid strategy, and monitoring.
+    </p>
+  </section>
+</main>
+
+<script src="js/constants.js"></script>
+<script src="js/units.js"></script>
+<script src="js/risk.js"></script>
+<script src="js/plan.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
