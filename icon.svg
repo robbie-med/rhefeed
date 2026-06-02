@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0f4c81"/>
+  <!-- Drip bag body -->
+  <rect x="176" y="80" width="160" height="180" rx="18" fill="none" stroke="#fff" stroke-width="20"/>
+  <!-- Drip bag hanger -->
+  <path d="M256 80 V48" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
+  <path d="M220 48 h72" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
+  <!-- Drip tube -->
+  <line x1="256" y1="260" x2="256" y2="330" stroke="#fff" stroke-width="14" stroke-linecap="round"/>
+  <!-- Drip drop -->
+  <path d="M256 340 C256 340 234 362 234 378 A22 22 0 0 0 278 378 C278 362 256 340 256 340Z" fill="#7dd3fc"/>
+  <!-- Cross/plus inside bag -->
+  <line x1="256" y1="118" x2="256" y2="222" stroke="#7dd3fc" stroke-width="18" stroke-linecap="round"/>
+  <line x1="204" y1="170" x2="308" y2="170" stroke="#7dd3fc" stroke-width="18" stroke-linecap="round"/>
+  <!-- Bottom label text area -->
+  <rect x="100" y="400" width="312" height="70" rx="12" fill="rgba(255,255,255,0.12)"/>
+  <text x="256" y="446" text-anchor="middle" font-family="system-ui,sans-serif" font-size="38" font-weight="700" fill="#fff" letter-spacing="2">RheF</text>
+</svg>
