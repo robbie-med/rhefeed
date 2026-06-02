@@ -2,253 +2,313 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Refeeding Syndrome One-Stop (Static)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Refeeding Syndrome One-Stop</title>
+  <meta name="description" content="Offline-capable refeeding syndrome risk calculator and management plan generator. Educational use only." />
+  <meta name="theme-color" content="#0f4c81" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="RheF" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+
 <header class="topbar">
   <div>
     <h1>Refeeding Syndrome One-Stop</h1>
-    <p class="subtle">Static, offline-capable risk + guidance. Educational; not a substitute for clinical judgment.</p>
+    <div class="topbar-sub">Educational · offline-capable · not a substitute for clinical judgment</div>
   </div>
   <div class="topbar-actions">
-    <button id="btnNew" class="btn secondary">New patient</button>
-    <button id="btnPrint" class="btn secondary">Print / PDF</button>
-    <button id="btnExport" class="btn secondary">Export JSON</button>
+    <button id="btnNew"    class="btn ghost">New</button>
+    <button id="btnPrint"  class="btn ghost">Print</button>
+    <button id="btnExport" class="btn ghost">Export</button>
   </div>
 </header>
 
 <main class="container">
-  <section class="card">
-    <h2>Mode</h2>
-    <div class="grid2">
-      <label class="required">
-        Patient type
-        <select id="patientType" required>
-          <option value="adult" selected>Adult</option>
-          <option value="peds">Pediatrics</option>
-        </select>
-      </label>
 
-      <label class="optional">
-        Setting
-        <select id="setting">
-          <option value="floor" selected>Floor / Ward</option>
-          <option value="icu">ICU</option>
-          <option value="ed">ED</option>
-        </select>
-      </label>
-    </div>
-  </section>
+  <!-- ── INPUTS TAB ─────────────────────────────────── -->
+  <div data-tab-pane="inputs">
 
-  <section class="card">
-    <h2>Anthropometrics & intake</h2>
-
-    <div class="grid3">
-      <label class="required">
-        Weight
-        <div class="inline">
-          <input id="weight" type="number" step="0.1" inputmode="decimal" placeholder="e.g., 56.7" required />
-          <select id="weightUnit">
-            <option value="kg" selected>kg</option>
-            <option value="lb">lb</option>
+    <!-- Mode -->
+    <section class="card">
+      <p class="card-title">Mode</p>
+      <div class="grid2">
+        <div class="field">
+          <label class="field-label" for="patientType">
+            <span class="req-dot"></span>Patient type
+          </label>
+          <select id="patientType" required>
+            <option value="adult" selected>Adult</option>
+            <option value="peds">Pediatrics</option>
           </select>
         </div>
-      </label>
-
-      <label class="required">
-        Height
-        <div class="inline">
-          <input id="height" type="number" step="0.1" inputmode="decimal" placeholder="e.g., 170" required />
-          <select id="heightUnit">
-            <option value="cm" selected>cm</option>
-            <option value="in">in</option>
+        <div class="field">
+          <label class="field-label" for="setting">Setting</label>
+          <select id="setting">
+            <option value="floor" selected>Floor / Ward</option>
+            <option value="icu">ICU</option>
+            <option value="ed">ED</option>
           </select>
         </div>
-      </label>
+      </div>
+    </section>
 
-      <label class="optional">
-        Usual weight (for % loss)
-        <div class="inline">
-          <input id="usualWeight" type="number" step="0.1" inputmode="decimal" placeholder="optional" />
-          <select id="usualWeightUnit">
-            <option value="kg" selected>kg</option>
-            <option value="lb">lb</option>
+    <!-- Anthropometrics -->
+    <section class="card">
+      <p class="card-title">Anthropometrics &amp; intake</p>
+      <div class="grid3">
+        <div class="field">
+          <label class="field-label" for="weight">
+            <span class="req-dot"></span>Weight
+          </label>
+          <div class="inline-pair">
+            <input id="weight" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 56.7" required />
+            <select id="weightUnit">
+              <option value="kg" selected>kg</option>
+              <option value="lb">lb</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="height">
+            <span class="req-dot"></span>Height
+          </label>
+          <div class="inline-pair">
+            <input id="height" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 170" required />
+            <select id="heightUnit">
+              <option value="cm" selected>cm</option>
+              <option value="in">in</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="usualWeight">Usual weight</label>
+          <div class="inline-pair">
+            <input id="usualWeight" type="number" step="0.1" inputmode="decimal" placeholder="optional" />
+            <select id="usualWeightUnit">
+              <option value="kg" selected>kg</option>
+              <option value="lb">lb</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid3" style="margin-top:.85rem">
+        <div class="field">
+          <label class="field-label" for="daysNoIntake">
+            <span class="req-dot"></span>Days with little/no intake
+          </label>
+          <input id="daysNoIntake" type="number" step="1" inputmode="numeric" placeholder="e.g. 7" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="intakeBand">Intake estimate (optional)</label>
+          <select id="intakeBand">
+            <option value="">(optional)</option>
+            <option value="none">Near zero</option>
+            <option value="lt50">&lt;50% needs</option>
+            <option value="lt25">&lt;25% needs</option>
+            <option value="lt500">&lt;500 kcal/day</option>
           </select>
         </div>
-      </label>
-    </div>
-
-    <div class="grid3">
-      <label class="required">
-        Days with little/no intake
-        <input id="daysNoIntake" type="number" step="1" inputmode="numeric" placeholder="e.g., 7" required />
-      </label>
-
-      <label class="optional">
-        Intake estimate (last few days)
-        <select id="intakeBand">
-          <option value="">(optional)</option>
-          <option value="none">Near zero</option>
-          <option value="lt50">&lt;50% needs</option>
-          <option value="lt25">&lt;25% needs</option>
-          <option value="lt500">&lt;500 kcal/day (adult heuristic)</option>
-        </select>
-      </label>
-
-      <label class="optional">
-        Unintentional weight loss time window
-        <select id="wtLossWindow">
-          <option value="">(optional)</option>
-          <option value="3mo">~3 months</option>
-          <option value="6mo">~6 months</option>
-        </select>
-      </label>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>Labs (baseline & current)</h2>
-    <p class="subtle">Minimum required: baseline P/K/Mg + current P. Add current K/Mg if available for ASPEN severity across electrolytes.</p>
-
-    <div class="grid3">
-      <label class="required">
-        Baseline phosphate
-        <div class="inline">
-          <input id="phosBase" type="number" step="0.01" inputmode="decimal" required />
-          <select id="phosUnit">
-            <option value="mmolL" selected>mmol/L</option>
-            <option value="mgdL">mg/dL</option>
+        <div class="field">
+          <label class="field-label" for="wtLossWindow">Wt-loss time window (optional)</label>
+          <select id="wtLossWindow">
+            <option value="">(optional)</option>
+            <option value="3mo">~3 months</option>
+            <option value="6mo">~6 months</option>
           </select>
         </div>
-      </label>
+      </div>
+    </section>
 
-      <label class="required">
-        Current phosphate
-        <div class="inline">
-          <input id="phosNow" type="number" step="0.01" inputmode="decimal" required />
-          <select id="phosUnitNow">
-            <option value="mmolL" selected>mmol/L</option>
-            <option value="mgdL">mg/dL</option>
-          </select>
+    <!-- Labs -->
+    <section class="card">
+      <p class="card-title">Labs — baseline &amp; current</p>
+      <p class="disclaimer" style="margin-bottom:.75rem">Minimum: baseline P/K/Mg + current P. Add current K/Mg for full ASPEN severity.</p>
+
+      <div class="grid3">
+        <div class="field">
+          <label class="field-label" for="phosBase">
+            <span class="req-dot"></span>Baseline phosphate
+          </label>
+          <div class="inline-pair">
+            <input id="phosBase" type="number" step="0.01" inputmode="decimal" required />
+            <select id="phosUnit">
+              <option value="mmolL" selected>mmol/L</option>
+              <option value="mgdL">mg/dL</option>
+            </select>
+          </div>
         </div>
-      </label>
+        <div class="field">
+          <label class="field-label" for="phosNow">
+            <span class="req-dot"></span>Current phosphate
+          </label>
+          <div class="inline-pair">
+            <input id="phosNow" type="number" step="0.01" inputmode="decimal" required />
+            <select id="phosUnitNow">
+              <option value="mmolL" selected>mmol/L</option>
+              <option value="mgdL">mg/dL</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="kBase">
+            <span class="req-dot"></span>Baseline K (mmol/L)
+          </label>
+          <input id="kBase" type="number" step="0.01" inputmode="decimal" required />
+        </div>
+      </div>
 
-      <label class="required">
-        Baseline potassium (mmol/L)
-        <input id="kBase" type="number" step="0.01" inputmode="decimal" required />
-      </label>
-    </div>
+      <div class="grid3" style="margin-top:.85rem">
+        <div class="field">
+          <label class="field-label" for="mgBase">
+            <span class="req-dot"></span>Baseline Mg (mmol/L)
+          </label>
+          <input id="mgBase" type="number" step="0.01" inputmode="decimal" required />
+        </div>
+        <div class="field">
+          <label class="field-label" for="kNow">Current K (mmol/L)</label>
+          <input id="kNow" type="number" step="0.01" inputmode="decimal" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="mgNow">Current Mg (mmol/L)</label>
+          <input id="mgNow" type="number" step="0.01" inputmode="decimal" />
+        </div>
+      </div>
 
-    <div class="grid3">
-      <label class="required">
-        Baseline magnesium (mmol/L)
-        <input id="mgBase" type="number" step="0.01" inputmode="decimal" required />
-      </label>
+      <!-- Optional labs (collapsible) -->
+      <button class="section-toggle" aria-expanded="false" aria-controls="optLabs">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+        Optional labs (albumin, prealbumin, lactate)
+      </button>
+      <div class="collapsible" id="optLabs" hidden>
+        <div class="grid3">
+          <div class="field">
+            <label class="field-label" for="albumin">Albumin (g/L)</label>
+            <input id="albumin" type="number" step="1" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="prealbumin">Prealbumin (mg/L)</label>
+            <input id="prealbumin" type="number" step="1" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="lactate">Lactate (mmol/L)</label>
+            <input id="lactate" type="number" step="0.1" inputmode="decimal" />
+          </div>
+        </div>
+      </div>
+    </section>
 
-      <label class="optional">
-        Current potassium (mmol/L)
-        <input id="kNow" type="number" step="0.01" inputmode="decimal" />
-      </label>
+    <!-- Clinical risk factors -->
+    <section class="card">
+      <p class="card-title">Clinical / meds / context</p>
+      <div class="checks-grid">
+        <label class="check-label"><input id="rfAlcohol"   type="checkbox" /> Alcohol misuse</label>
+        <label class="check-label"><input id="rfDiuretics" type="checkbox" /> Diuretics</label>
+        <label class="check-label"><input id="rfInsulin"   type="checkbox" /> Insulin use</label>
+        <label class="check-label"><input id="rfChemo"     type="checkbox" /> Chemo (recent)</label>
+        <label class="check-label"><input id="rfAntacids"  type="checkbox" /> Antacids (significant)</label>
+        <label class="check-label"><input id="rfStarvation" type="checkbox" /> Eating disorder / starvation</label>
+        <label class="check-label"><input id="rfVomiting"  type="checkbox" /> Vomiting</label>
+        <label class="check-label"><input id="rfEdema"     type="checkbox" /> Peripheral edema / fluid overload</label>
+        <label class="check-label"><input id="rfSystemic"  type="checkbox" /> Life-threatening systemic disease</label>
+      </div>
 
-      <label class="optional">
-        Current magnesium (mmol/L)
-        <input id="mgNow" type="number" step="0.01" inputmode="decimal" />
-      </label>
-    </div>
+      <!-- Severity scores (collapsible) -->
+      <button class="section-toggle" aria-expanded="false" aria-controls="optScores" style="margin-top:.75rem">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+        Optional severity scores (APACHE II, SOFA, GCS)
+      </button>
+      <div class="collapsible" id="optScores" hidden>
+        <div class="grid3">
+          <div class="field">
+            <label class="field-label" for="apache">APACHE II (adult ICU)</label>
+            <input id="apache" type="number" step="1" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="sofa">SOFA</label>
+            <input id="sofa" type="number" step="1" inputmode="numeric" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="gcs">GCS</label>
+            <input id="gcs" type="number" step="1" inputmode="numeric" />
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <div class="grid3">
-      <label class="optional">
-        Albumin (g/L)
-        <input id="albumin" type="number" step="1" inputmode="numeric" />
-      </label>
+    <!-- Run -->
+    <section class="card">
+      <div class="run-row">
+        <button id="btnCalc" class="btn primary">Calculate &amp; generate plan</button>
+        <span id="status" class="status-msg"></span>
+      </div>
+    </section>
 
-      <label class="optional">
-        Prealbumin (mg/L)
-        <input id="prealbumin" type="number" step="1" inputmode="numeric" />
-      </label>
+  </div><!-- /inputs pane -->
 
-      <label class="optional">
-        Lactate (mmol/L)
-        <input id="lactate" type="number" step="0.1" inputmode="decimal" />
-      </label>
-    </div>
-  </section>
+  <!-- ── RESULTS TAB ────────────────────────────────── -->
+  <div data-tab-pane="results" class="hidden">
 
-  <section class="card">
-    <h2>Clinical / meds / context</h2>
+    <section class="card" id="resultsCard">
+      <p class="card-title">Risk assessment</p>
+      <div id="heroVerdictWrap"></div>
+      <div id="results"></div>
+    </section>
 
-    <div class="grid3">
-      <label class="optional"><span>Alcohol misuse</span><input id="rfAlcohol" type="checkbox" /></label>
-      <label class="optional"><span>Diuretics</span><input id="rfDiuretics" type="checkbox" /></label>
-      <label class="optional"><span>Insulin use</span><input id="rfInsulin" type="checkbox" /></label>
+    <section class="card">
+      <p class="card-title">Management guidance</p>
+      <div id="plan" class="result-section"></div>
+    </section>
 
-      <label class="optional"><span>Chemo (recent)</span><input id="rfChemo" type="checkbox" /></label>
-      <label class="optional"><span>Antacids (significant)</span><input id="rfAntacids" type="checkbox" /></label>
-      <label class="optional"><span>Eating disorder / starvation</span><input id="rfStarvation" type="checkbox" /></label>
+    <section class="card">
+      <p class="card-title">EMR copy block</p>
+      <p class="disclaimer" style="margin-bottom:.5rem">ASCII-only. Click to copy.</p>
+      <pre id="emrBlock" class="copybox" tabindex="0" role="button" aria-label="Click to copy EMR block"></pre>
+      <div style="margin-top:.6rem">
+        <button id="btnCopy" class="btn outline">Copy block</button>
+      </div>
+    </section>
 
-      <label class="optional"><span>Vomiting</span><input id="rfVomiting" type="checkbox" /></label>
-      <label class="optional"><span>Peripheral edema / fluid overload</span><input id="rfEdema" type="checkbox" /></label>
-      <label class="optional"><span>Life-threatening systemic disease</span><input id="rfSystemic" type="checkbox" /></label>
-    </div>
+    <section class="card">
+      <p class="card-title">References</p>
+      <div id="refs" class="refs"></div>
+    </section>
 
-    <div class="grid3">
-      <label class="optional">
-        APACHE II (adult ICU)
-        <input id="apache" type="number" step="1" inputmode="numeric" />
-      </label>
+    <section class="card">
+      <p class="card-title">Disclaimer</p>
+      <p class="disclaimer">
+        This tool provides educational decision support only. It does not replace local protocols, pharmacy guidance,
+        nutrition support teams, or clinician judgment. Always individualize dosing, repletion, fluid strategy, and monitoring.
+      </p>
+    </section>
 
-      <label class="optional">
-        SOFA (optional)
-        <input id="sofa" type="number" step="1" inputmode="numeric" />
-      </label>
+  </div><!-- /results pane -->
 
-      <label class="optional">
-        GCS
-        <input id="gcs" type="number" step="1" inputmode="numeric" />
-      </label>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>Run</h2>
-    <div class="actions">
-      <button id="btnCalc" class="btn primary">Calculate & generate plan</button>
-      <span id="status" class="status"></span>
-    </div>
-  </section>
-
-  <section class="card" id="resultsCard">
-    <h2>Results</h2>
-    <div id="results"></div>
-
-    <div class="divider"></div>
-
-    <h2>Management guidance</h2>
-    <div id="plan"></div>
-
-    <div class="divider"></div>
-
-    <h2>EMR copy block</h2>
-    <p class="subtle">ASCII-only. Click to copy.</p>
-    <pre id="emrBlock" class="copybox" tabindex="0"></pre>
-    <button id="btnCopy" class="btn secondary">Copy block</button>
-  </section>
-
-  <section class="card">
-    <h2>References</h2>
-    <div id="refs" class="refs"></div>
-  </section>
-
-  <section class="card subtlebox">
-    <h2>Disclaimer</h2>
-    <p>
-      This tool provides educational decision support only. It does not replace local protocols, pharmacy guidance,
-      nutrition support teams, or clinician judgment. Always individualize dosing, repletion, fluid strategy, and monitoring.
-    </p>
-  </section>
 </main>
+
+<!-- Mobile tab bar -->
+<nav class="tab-bar" role="tablist" aria-label="Navigation">
+  <button class="tab-btn active" role="tab" aria-selected="true"  data-tab="inputs"  id="tabBtnInputs">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+    </svg>
+    Inputs
+  </button>
+  <button class="tab-btn" role="tab" aria-selected="false" data-tab="results" id="tabBtnResults">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </svg>
+    Results
+  </button>
+</nav>
+
+<!-- Toast -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script src="js/constants.js"></script>
 <script src="js/units.js"></script>

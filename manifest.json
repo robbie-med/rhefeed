@@ -1,0 +1,19 @@
+{
+  "name": "Refeeding Syndrome One-Stop",
+  "short_name": "RheF",
+  "description": "Offline-capable refeeding syndrome risk calculator and management plan generator.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f4c81",
+  "theme_color": "#0f4c81",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "health"]
+}
