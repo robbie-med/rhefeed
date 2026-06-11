@@ -1,12 +1,15 @@
-const CACHE = "rhefeed-v1";
+const CACHE = "rhefeed-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./css/styles.css",
   "./js/constants.js",
   "./js/units.js",
+  "./js/energy.js",
+  "./js/malnutrition.js",
   "./js/risk.js",
   "./js/plan.js",
+  "./js/note.js",
   "./js/storage.js",
   "./js/app.js",
   "./manifest.json",

@@ -1,416 +1,391 @@
+// ─────────────────────────────────────────────────────────────────────────
+// UI wiring. Owns rendering and interaction only — all clinical thresholds and
+// computation live in constants/energy/malnutrition/risk/plan/note.
+// ─────────────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
 
-const el = {
-  patientType: $("patientType"),
-  setting: $("setting"),
-
-  weight: $("weight"),
-  weightUnit: $("weightUnit"),
-  height: $("height"),
-  heightUnit: $("heightUnit"),
-  usualWeight: $("usualWeight"),
-  usualWeightUnit: $("usualWeightUnit"),
-
-  daysNoIntake: $("daysNoIntake"),
-  intakeBand: $("intakeBand"),
-  wtLossWindow: $("wtLossWindow"),
-
-  phosBase: $("phosBase"),
-  phosUnit: $("phosUnit"),
-  phosNow: $("phosNow"),
-  phosUnitNow: $("phosUnitNow"),
-  kBase: $("kBase"),
-  mgBase: $("mgBase"),
-  kNow: $("kNow"),
-  mgNow: $("mgNow"),
-
-  albumin: $("albumin"),
-  prealbumin: $("prealbumin"),
-  lactate: $("lactate"),
-
-  rfAlcohol: $("rfAlcohol"),
-  rfDiuretics: $("rfDiuretics"),
-  rfInsulin: $("rfInsulin"),
-  rfChemo: $("rfChemo"),
-  rfAntacids: $("rfAntacids"),
-  rfStarvation: $("rfStarvation"),
-  rfVomiting: $("rfVomiting"),
-  rfEdema: $("rfEdema"),
-  rfSystemic: $("rfSystemic"),
-
-  apache: $("apache"),
-  sofa: $("sofa"),
-  gcs: $("gcs"),
-
-  btnCalc: $("btnCalc"),
-  btnCopy: $("btnCopy"),
-  btnPrint: $("btnPrint"),
-  btnExport: $("btnExport"),
-  btnNew: $("btnNew"),
-
-  heroVerdictWrap: $("heroVerdictWrap"),
-  results: $("results"),
-  plan: $("plan"),
-  emrBlock: $("emrBlock"),
-  status: $("status"),
-  refs: $("refs"),
-  toast: $("toast")
-};
-
-// ── Tab switching ────────────────────────────────────────
-const panes = {
-  inputs:  document.querySelector('[data-tab-pane="inputs"]'),
-  results: document.querySelector('[data-tab-pane="results"]')
-};
-const tabBtns = {
-  inputs:  $("tabBtnInputs"),
-  results: $("tabBtnResults")
-};
-
-function switchTab(tab) {
-  Object.keys(panes).forEach(k => {
-    panes[k].classList.toggle("hidden", k !== tab);
-    tabBtns[k].classList.toggle("active", k === tab);
-    tabBtns[k].setAttribute("aria-selected", k === tab ? "true" : "false");
-  });
-}
-
-tabBtns.inputs.addEventListener("click",  () => switchTab("inputs"));
-tabBtns.results.addEventListener("click", () => switchTab("results"));
-
-// ── Collapsible sections ─────────────────────────────────
-document.querySelectorAll(".section-toggle").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const expanded = btn.getAttribute("aria-expanded") === "true";
-    btn.setAttribute("aria-expanded", String(!expanded));
-    const target = document.getElementById(btn.getAttribute("aria-controls"));
-    if (expanded) target.setAttribute("hidden", "");
-    else target.removeAttribute("hidden");
-  });
-});
-
-// ── Toast ────────────────────────────────────────────────
-let toastTimer;
-function showToast(msg) {
-  el.toast.textContent = msg;
-  el.toast.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.toast.classList.remove("show"), 2200);
-}
-
-// ── Inputs ───────────────────────────────────────────────
-function getInputs() {
-  const weightKg  = weightToKg(parseFloat(el.weight.value), el.weightUnit.value);
-  const heightCm  = heightToCm(parseFloat(el.height.value), el.heightUnit.value);
-  const usualKg   = el.usualWeight.value
-    ? weightToKg(parseFloat(el.usualWeight.value), el.usualWeightUnit.value)
-    : NaN;
-
-  const phosBase_mmolL = phosToMmolL(parseFloat(el.phosBase.value), el.phosUnit.value);
-  const phosNow_mmolL  = phosToMmolL(parseFloat(el.phosNow.value),  el.phosUnitNow.value);
-
-  return {
-    patientType: el.patientType.value,
-    setting:     el.setting.value,
-    weightKg, heightCm, usualKg,
-    daysNoIntake: parseInt(el.daysNoIntake.value, 10),
-    intakeBand:  el.intakeBand.value,
-    wtLossWindow: el.wtLossWindow.value,
-    phosBase_mmolL, phosNow_mmolL,
-    kBase:  parseFloat(el.kBase.value),
-    mgBase: parseFloat(el.mgBase.value),
-    kNow:   el.kNow.value  ? parseFloat(el.kNow.value)  : NaN,
-    mgNow:  el.mgNow.value ? parseFloat(el.mgNow.value) : NaN,
-    albumin:    el.albumin.value    ? parseFloat(el.albumin.value)    : NaN,
-    prealbumin: el.prealbumin.value ? parseFloat(el.prealbumin.value) : NaN,
-    lactate:    el.lactate.value    ? parseFloat(el.lactate.value)    : NaN,
-    rfAlcohol:   el.rfAlcohol.checked,
-    rfDiuretics: el.rfDiuretics.checked,
-    rfInsulin:   el.rfInsulin.checked,
-    rfChemo:     el.rfChemo.checked,
-    rfAntacids:  el.rfAntacids.checked,
-    rfStarvation: el.rfStarvation.checked,
-    rfVomiting:  el.rfVomiting.checked,
-    rfEdema:     el.rfEdema.checked,
-    rfSystemic:  el.rfSystemic.checked,
-    apache: el.apache.value ? parseInt(el.apache.value, 10) : NaN,
-    sofa:   el.sofa.value   ? parseInt(el.sofa.value,   10) : NaN,
-    gcs:    el.gcs.value    ? parseInt(el.gcs.value,    10) : NaN
-  };
-}
-
-function validateMinimum(i) {
-  const errs = [];
-  if (!(isFinite(i.weightKg)        && i.weightKg > 0))        errs.push("Weight required");
-  if (!(isFinite(i.heightCm)        && i.heightCm > 0))        errs.push("Height required");
-  if (!(isFinite(i.daysNoIntake)    && i.daysNoIntake >= 0))   errs.push("Days of minimal intake required");
-  if (!(isFinite(i.phosBase_mmolL)  && i.phosBase_mmolL > 0))  errs.push("Baseline phosphate required");
-  if (!(isFinite(i.phosNow_mmolL)   && i.phosNow_mmolL > 0))   errs.push("Current phosphate required");
-  if (!(isFinite(i.kBase)           && i.kBase > 0))           errs.push("Baseline potassium required");
-  if (!(isFinite(i.mgBase)          && i.mgBase > 0))          errs.push("Baseline magnesium required");
-  if (isFinite(i.heightCm) && (i.heightCm < 30 || i.heightCm > 250)) errs.push("Height out of range");
-  if (isFinite(i.weightKg) && (i.weightKg < 1  || i.weightKg > 400)) errs.push("Weight out of range");
-  return errs;
-}
-
-// ── Helpers ──────────────────────────────────────────────
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, m =>
-    ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m])
-  );
+    ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m]));
 }
-
-function renderBadges(badges) {
-  return badges.map(b => `<span class="badge ${b.cls}">${escapeHtml(b.text)}</span>`).join("");
-}
-
+function num(id) { const v = parseFloat($(id).value); return isFinite(v) ? v : NaN; }
+function intVal(id) { const v = parseInt($(id).value, 10); return isFinite(v) ? v : NaN; }
+function checked(id) { const n = $(id); return n ? n.checked : false; }
 function dropLabel(pct) {
   if (!isFinite(pct)) return "n/a";
   const sign = pct >= 0 ? "−" : "+";
   return `${sign}${Math.abs(pct).toFixed(1)}%`;
 }
 
-// ── Compute ───────────────────────────────────────────────
-function computeAll(i) {
-  const bmi       = calcBMI(i.weightKg, i.heightCm);
-  const wtLossPct = isFinite(i.usualKg) ? percentWeightLoss(i.weightKg, i.usualKg) : NaN;
-  const phosDropPct = percentDrop(i.phosBase_mmolL, i.phosNow_mmolL);
-  const kDropPct    = isFinite(i.kNow)  ? percentDrop(i.kBase,  i.kNow)  : NaN;
-  const mgDropPct   = isFinite(i.mgNow) ? percentDrop(i.mgBase, i.mgNow) : NaN;
-  const phosSev = aspenSeverityFromDrop(phosDropPct);
-  const kSev    = aspenSeverityFromDrop(kDropPct);
-  const mgSev   = aspenSeverityFromDrop(mgDropPct);
-  const order = { "Severe":3, "Moderate":2, "Mild":1, "None":0, null:-1 };
-  const aspenWorst = [phosSev, kSev, mgSev].reduce((a, b) => order[b] > order[a] ? b : a, "None");
-  return { bmi, wtLossPct, phosDropPct, kDropPct, mgDropPct, phosSev, kSev, mgSev, aspenWorst };
+// ── Pane navigation ────────────────────────────────────────
+$$(".pane-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    const pane = tab.dataset.pane;
+    $$(".pane-tab").forEach(t => {
+      const on = t === tab;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    $$("[data-pane-body]").forEach(b =>
+      b.classList.toggle("hidden", b.dataset.paneBody !== pane));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+});
+
+// ── Populate factor selects ────────────────────────────────
+function fillFactors(id) {
+  $(id).innerHTML = ENERGY_FACTORS.map((f, idx) =>
+    `<option value="${f.value}" ${idx === 1 ? "selected" : ""}>${f.label}</option>`).join("");
+}
+fillFactors("a_factor");
+fillFactors("p_factor");
+
+// ── Toast ──────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = $("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
 }
 
-// ── EMR block ─────────────────────────────────────────────
-function buildEMR(i, computed, risk, plan) {
-  const lines = [];
-  lines.push("REFEEDING RISK ASSESSMENT");
-  lines.push("----------------------------------------");
-  lines.push(`Type: ${i.patientType.toUpperCase()} | Setting: ${i.setting.toUpperCase()}`);
-  lines.push(`Wt: ${i.weightKg.toFixed(1)} kg | Ht: ${i.heightCm.toFixed(1)} cm | BMI: ${computed.bmi.toFixed(1)}`);
-  if (isFinite(computed.wtLossPct)) lines.push(`Wt loss: ${computed.wtLossPct.toFixed(1)}% (${i.wtLossWindow || "window unspecified"})`);
-  lines.push(`Minimal intake: ${i.daysNoIntake} day(s) | Intake band: ${i.intakeBand || "n/a"}`);
-  lines.push(`P: ${i.phosBase_mmolL.toFixed(2)} -> ${i.phosNow_mmolL.toFixed(2)} mmol/L (${dropLabel(computed.phosDropPct)})`);
-  lines.push(`K baseline: ${i.kBase.toFixed(2)} mmol/L${isFinite(i.kNow) ? ` -> ${i.kNow.toFixed(2)} (${dropLabel(computed.kDropPct)})` : ""}`);
-  lines.push(`Mg baseline: ${i.mgBase.toFixed(2)} mmol/L${isFinite(i.mgNow) ? ` -> ${i.mgNow.toFixed(2)} (${dropLabel(computed.mgDropPct)})` : ""}`);
-  lines.push("");
-  lines.push(`Risk label: ${risk.badge.text}`);
-  if (risk.imminentFlags.length) lines.push(`Imminent flags: ${risk.imminentFlags.join("; ")}`);
-  lines.push(`NICE high risk: ${risk.nice.highRisk ? "YES" : "NO"}`);
-  if (risk.nice.majorFlags.length) lines.push(`NICE major: ${risk.nice.majorFlags.join(", ")}`);
-  if (risk.nice.minorFlags.length) lines.push(`NICE minor: ${risk.nice.minorFlags.join(", ")}`);
-  lines.push(`ASPEN worst electrolyte severity: ${risk.aspenWorst}`);
-  if (risk.qualitative.length) {
-    lines.push("");
-    lines.push(`Other risk factors: ${risk.qualitative.join(", ")}`);
-  }
-  lines.push("");
-  lines.push("PLAN (framework; follow local protocol):");
-  if (plan.feed) {
-    lines.push(`- Calories: ${plan.feed.start}`);
-    lines.push(`- Advance: ${plan.feed.advance}`);
-  }
-  lines.push(`- Thiamine: ${plan.thiamine}`);
-  plan.monitor.forEach(m => lines.push(`- Monitoring: ${m}`));
-  plan.electrolytes.forEach(e => lines.push(`- Electrolytes: ${e}`));
-  plan.consults.forEach(c => lines.push(`- Consult: ${c}`));
-  return lines.join("\n");
+// ── Transparency helpers ───────────────────────────────────
+function refLink(ref) {
+  if (!ref) return "";
+  return `<a href="${ref.url}" target="_blank" rel="noopener">${escapeHtml(ref.label)} ↗</a>`;
+}
+function calcDetails(summary, workLines, ref) {
+  const body = (workLines || []).map(l => `<div class="work-line">${escapeHtml(l)}</div>`).join("");
+  return `<details class="calc">
+    <summary>${escapeHtml(summary)}</summary>
+    <div class="calc-body">${body}${ref ? `<div class="work-ref">Source: ${refLink(ref)}</div>` : ""}</div>
+  </details>`;
 }
 
-// ── Render results ────────────────────────────────────────
-function run() {
-  el.status.textContent = "";
-  const i = getInputs();
-  const errs = validateMinimum(i);
-  if (errs.length) {
-    el.status.textContent = "Fix required fields: " + errs.join(" · ");
-    el.status.style.color = "var(--bad)";
-    return;
+// ── Shared energy computation ──────────────────────────────
+function computeEnergy({ sex, ageYears, weightKg, heightCm, factor, intakeKcal, daysOfDeficit, bmi, wtLossPct, isPeds }) {
+  const bmr = estimateBMR({ sex, ageYears, weightKg, heightCm });
+  if (!bmr) return null;
+  const needs = totalEnergyNeeds(bmr, factor);
+  const balance = isFinite(intakeKcal) ? energyBalance(needs.value, intakeKcal, daysOfDeficit) : null;
+  const pctMet = balance ? balance.pctMet : NaN;
+  const starvation = degreeOfStarvation({ bmi, wtLossPct, pctMet, isPeds });
+  return { bmr, needs, balance, factor, intakeKcal, starvation };
+}
+
+function renderEnergy(energy) {
+  if (!energy) return "";
+  let html = `<h3>Caloric needs &amp; energy balance</h3><div class="kpiRow">`;
+  html += `<div class="kpi"><div class="label">BMR</div><div class="value">${Math.round(energy.bmr.value)}</div><div class="label">${escapeHtml(energy.bmr.method)}</div></div>`;
+  html += `<div class="kpi"><div class="label">Est. needs</div><div class="value">${Math.round(energy.needs.value)}</div><div class="label">kcal/day ×${energy.factor}</div></div>`;
+  if (energy.balance)
+    html += `<div class="kpi"><div class="label">Intake</div><div class="value">${energy.balance.pctMet.toFixed(0)}%</div><div class="label">of needs</div></div>`;
+  html += `</div>`;
+  html += calcDetails("Show calculation — BMR & needs", energy.needs.work, energy.needs.ref);
+  if (energy.balance) {
+    html += `<ul><li>Intake adequacy: <span class="badge ${energy.balance.adequacy.cls}">${escapeHtml(energy.balance.adequacy.grade)}</span></li>`;
+    html += `<li>Daily deficit: <strong>${Math.round(energy.balance.dailyDeficit)}</strong> kcal/day</li>`;
+    if (isFinite(energy.balance.cumulative))
+      html += `<li>Estimated cumulative deficit: <strong>${Math.round(energy.balance.cumulative).toLocaleString()}</strong> kcal</li>`;
+    html += `</ul>`;
+    html += calcDetails("Show calculation — energy deficit", energy.balance.work, energy.balance.ref);
   }
+  if (energy.starvation.drivers.length) {
+    html += `<h3>Degree of undernutrition / starvation</h3>`;
+    html += `<p><span class="badge ${energy.starvation.cls}">${escapeHtml(energy.starvation.label)}</span></p>`;
+    html += `<ul>${energy.starvation.drivers.map(d => `<li>${escapeHtml(d)}</li>`).join("")}</ul>`;
+  }
+  return html;
+}
 
-  saveState(collectFormState());
+function renderPlan(plan) {
+  let html = `<h3>Nutrition — ${escapeHtml(plan.feed.headline)}</h3><ul>`;
+  html += plan.feed.lines.map(x => `<li>${escapeHtml(x)}</li>`).join("");
+  html += `</ul><div class="work-ref">Source: ${refLink(plan.feed.ref)}</div>`;
+  html += `<h3>Thiamine / vitamins</h3><p>${escapeHtml(plan.thiamine.text)}</p>`;
+  html += `<h3>Monitoring</h3><ul>${plan.monitor.lines.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
+  html += `<h3>Electrolytes (framework)</h3><ul>${plan.electrolytes.lines.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
+  html += `<h3>Consult triggers</h3><ul>${plan.consults.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
+  return html;
+}
 
-  const computed = computeAll(i);
-  const lowElectrolytes = (i.kBase < 3.5) || (i.mgBase < 0.7) || (i.phosBase_mmolL < 0.8);
-  const alcoholOrRiskMeds = i.rfAlcohol || i.rfDiuretics || i.rfInsulin || i.rfChemo || i.rfAntacids;
+function renderResults(container, { heroBadge, heroSub, sections, plan, noteText }) {
+  let html = `<section class="card"><p class="card-title">Risk assessment</p>`;
+  html += `<div class="hero-verdict ${heroBadge.cls}"><div><div class="verdict-label">Overall</div><div class="verdict-text">${escapeHtml(heroBadge.text)}</div></div><div>${heroSub}</div></div>`;
+  html += `<div class="result-section">${sections}</div></section>`;
+  html += `<section class="card"><p class="card-title">Management guidance</p><div class="result-section">${renderPlan(plan)}</div></section>`;
+  html += `<section class="card"><p class="card-title">Assessment &amp; Plan — copy to chart</p>`;
+  html += `<p class="disclaimer" style="margin-bottom:.5rem">ASCII-only. Click to copy.</p>`;
+  html += `<pre class="copybox" data-copy tabindex="0" role="button">${escapeHtml(noteText)}</pre>`;
+  html += `<div style="margin-top:.6rem"><button class="btn outline" data-copybtn>Copy block</button></div></section>`;
+  container.innerHTML = html;
 
+  const pre = container.querySelector("[data-copy]");
+  const copy = () => {
+    navigator.clipboard.writeText(noteText)
+      .then(() => showToast("Copied to clipboard"))
+      .catch(() => showToast("Copy failed — long-press to select"));
+  };
+  pre.addEventListener("click", copy);
+  container.querySelector("[data-copybtn]").addEventListener("click", copy);
+  container.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ── ADULT calculate ────────────────────────────────────────
+function runAdult() {
+  const status = document.querySelector('[data-status="adult"]');
+  const weightKg = weightToKg(num("a_weight"), $("a_weightUnit").value);
+  const heightCm = heightToCm(num("a_height"), $("a_heightUnit").value);
+  const usualKg  = $("a_usualWeight").value ? weightToKg(num("a_usualWeight"), $("a_usualWeightUnit").value) : NaN;
+  const phosBase = phosToMmolL(num("a_phosBase"), $("a_phosUnit").value);
+  const phosNow  = phosToMmolL(num("a_phosNow"), $("a_phosUnitNow").value);
+  const kBase = num("a_kBase"), mgBase = num("a_mgBase");
+  const kNow = $("a_kNow").value ? num("a_kNow") : NaN;
+  const mgNow = $("a_mgNow").value ? num("a_mgNow") : NaN;
+  const daysNoIntake = intVal("a_daysNoIntake");
+  const intakeKcal = $("a_intakeKcal").value ? num("a_intakeKcal") : NaN;
+  const ageYears = $("a_age").value ? num("a_age") : 40;
+  const sex = $("a_sex").value;
+  const factor = parseFloat($("a_factor").value);
+
+  const errs = [];
+  if (!(weightKg > 0)) errs.push("weight");
+  if (!(heightCm > 0)) errs.push("height");
+  if (!(daysNoIntake >= 0)) errs.push("days of intake");
+  if (!(phosBase > 0)) errs.push("baseline P");
+  if (!(phosNow > 0)) errs.push("current P");
+  if (!(kBase > 0)) errs.push("baseline K");
+  if (!(mgBase > 0)) errs.push("baseline Mg");
+  if (errs.length) { status.textContent = "Required: " + errs.join(", "); status.style.color = "var(--bad)"; return; }
+
+  const bmi = calcBMI(weightKg, heightCm);
+  const wtLossPct = isFinite(usualKg) ? percentWeightLoss(weightKg, usualKg) : NaN;
+  const phosDropPct = percentDrop(phosBase, phosNow);
+  const kDropPct = percentDrop(kBase, kNow);
+  const mgDropPct = percentDrop(mgBase, mgNow);
+  const rsSeverityWorst = ["Severe","Moderate","Mild","None"].find(s =>
+    [rsSeverityFromDrop(phosDropPct), rsSeverityFromDrop(kDropPct), rsSeverityFromDrop(mgDropPct)].includes(s)) || "None";
+
+  const energy = computeEnergy({ sex, ageYears, weightKg, heightCm, factor, intakeKcal, daysOfDeficit: daysNoIntake, bmi, wtLossPct, isPeds: false });
+  const pctMet = energy && energy.balance ? energy.balance.pctMet : NaN;
+
+  const lytesMinimal = (kBase < 3.5) || (mgBase < 0.7) || (phosBase < 0.8);
+  const lytesSignificant = (kBase < 3.0) || (mgBase < 0.5) || (phosBase < 0.6);
+  const aspen = aspenAdultRisk({
+    bmi, wtLossPct, daysNoIntake, intakePctMet: pctMet,
+    lytesMinimal, lytesSignificant,
+    fatLossMod: checked("a_fatLossMod"), fatLossSevere: checked("a_fatLossSevere"),
+    muscleLossMild: checked("a_muscleLossMild"), muscleLossSevere: checked("a_muscleLossSevere"),
+    comorbidityMod: checked("a_comorbidityMod"), comorbiditySevere: checked("a_comorbiditySevere")
+  });
   const nice = niceHighRiskAdult({
-    bmi: computed.bmi,
-    wtLossPct: computed.wtLossPct,
-    daysNoIntake: i.daysNoIntake,
-    lowElectrolytes,
-    alcoholOrRiskMeds
+    bmi, wtLossPct, daysNoIntake,
+    lowElectrolytes: lytesMinimal,
+    alcoholOrRiskMeds: checked("a_rfAlcohol") || checked("a_rfDiuretics") || checked("a_rfInsulin") || checked("a_rfChemo") || checked("a_rfAntacids")
   });
+  const imminent = imminentFlags({ phosNow_mmolL: phosNow, phosDropPct, kDropPct, mgDropPct });
+  const riskLabel = overallRiskLabel({ aspenLevel: aspen.level, rsSeverityWorst, imminentCount: imminent.length, niceHighRisk: nice.highRisk });
+  const badge = labelToBadge(riskLabel);
+  const bmiC = bmiClass(bmi);
 
-  const imminentFlagsArr = imminentFlags({
-    phosNow_mmolL: i.phosNow_mmolL,
-    phosDropPct: computed.phosDropPct,
-    kDropPct: computed.kDropPct,
-    mgDropPct: computed.mgDropPct
-  });
+  const plan = buildPlan({ patientType: "adult", setting: $("a_setting").value, weightKg, riskLevel: riskLabel, niceExtreme: nice.extreme, rsSeverityWorst, imminent: imminent.length > 0 });
 
-  const riskLabel = overallRiskLabel(nice.highRisk, computed.aspenWorst, imminentFlagsArr);
-  const badge     = labelToBadge(riskLabel);
-  const qualitative = qualitativeRiskFactors(i, computed.bmi, computed.wtLossPct);
+  // Sections HTML
+  let sections = `<div class="kpiRow">
+    <div class="kpi"><div class="label">BMI</div><div class="value">${bmi.toFixed(1)}</div><div class="label">${escapeHtml(bmiC.label)}</div></div>
+    <div class="kpi"><div class="label">Phos shift</div><div class="value">${dropLabel(phosDropPct)}</div><div class="label">${escapeHtml(rsSeverityFromDrop(phosDropPct) || "n/a")}</div></div>
+    <div class="kpi"><div class="label">Wt loss</div><div class="value">${isFinite(wtLossPct) ? dropLabel(wtLossPct) : "—"}</div></div>
+  </div>`;
+  sections += calcDetails("Show calculation — BMI", [`BMI = wt ÷ height² = ${weightKg.toFixed(1)} ÷ (${(heightCm/100).toFixed(2)})² = ${bmi.toFixed(1)} kg/m²`, `WHO band: ${bmiC.label}`], REFS.whoBmi);
+  sections += `<h3>ASPEN 2020 adult risk</h3><p><span class="badge ${badge.cls}">${escapeHtml(aspen.level === "none" ? "Not at increased risk" : aspen.level + " risk")}</span></p><ul>`;
+  sections += aspen.significantCriteria.map(c => `<li>Significant: ${escapeHtml(c)}</li>`).join("");
+  sections += aspen.moderateCriteria.map(c => `<li>Moderate: ${escapeHtml(c)}</li>`).join("");
+  if (!aspen.significantCriteria.length && !aspen.moderateCriteria.length) sections += `<li>No ASPEN criteria met</li>`;
+  sections += `</ul><div class="work-ref">Source: ${refLink(aspen.ref)} — Significant = any 1 criterion; Moderate = any 2.</div>`;
+  sections += `<h3>NICE CG32 (adult)</h3><ul><li>High risk: <strong>${nice.highRisk ? "YES" : "NO"}</strong>${nice.extreme ? " (extreme — start 5 kcal/kg/day)" : ""}</li>`;
+  sections += `<li>Major: ${nice.majorFlags.length ? escapeHtml(nice.majorFlags.join("; ")) : "none"}</li>`;
+  sections += `<li>Minor: ${nice.minorFlags.length ? escapeHtml(nice.minorFlags.join("; ")) : "none"}</li></ul>`;
+  sections += `<h3>Electrolyte-shift severity (ASPEN)</h3><ul>
+    <li>Phosphate: ${escapeHtml(rsSeverityFromDrop(phosDropPct) || "n/a")} (${dropLabel(phosDropPct)})</li>
+    <li>Potassium: ${isFinite(kDropPct) ? `${escapeHtml(rsSeverityFromDrop(kDropPct))} (${dropLabel(kDropPct)})` : "enter current K"}</li>
+    <li>Magnesium: ${isFinite(mgDropPct) ? `${escapeHtml(rsSeverityFromDrop(mgDropPct))} (${dropLabel(mgDropPct)})` : "enter current Mg"}</li></ul>`;
+  sections += calcDetails("Show calculation — electrolyte % drop", [`% drop = (baseline − current) ÷ baseline × 100`, `Phosphate: (${phosBase.toFixed(2)} − ${phosNow.toFixed(2)}) ÷ ${phosBase.toFixed(2)} × 100 = ${dropLabel(phosDropPct)}`, `Severity bands: mild 10–20%, moderate 20–30%, severe >30% (within 5 days)`], REFS.aspen2020);
+  sections += renderEnergy(energy);
 
-  const plan = buildPlan({
-    patientType: i.patientType,
-    setting: i.setting,
-    weightKg: i.weightKg,
-    riskLabel,
-    nice,
-    aspenWorst: computed.aspenWorst,
-    imminentFlagsArr
-  });
+  const heroSub = `${imminent.map(x => `<span class="badge bad">${escapeHtml(x)}</span>`).join("")}
+    ${nice.highRisk ? `<span class="badge warn">NICE high risk</span>` : ""}
+    <span class="badge ${badge.cls}">ASPEN: ${escapeHtml(aspen.level)}</span>
+    <span class="badge ${badge.cls}">Shift: ${escapeHtml(rsSeverityWorst)}</span>`;
 
-  // Hero verdict
-  el.heroVerdictWrap.innerHTML = `
-    <div class="hero-verdict ${badge.cls}">
-      <div>
-        <div class="verdict-label">Overall risk</div>
-        <div class="verdict-text">${escapeHtml(badge.text)}</div>
-      </div>
-      <div>
-        ${renderBadges(imminentFlagsArr.map(x => ({ text: x, cls: "bad" })))}
-        ${nice.highRisk ? `<span class="badge warn">NICE high risk</span>` : `<span class="badge ok">NICE not-high</span>`}
-        <span class="badge ${badge.cls}">ASPEN: ${escapeHtml(computed.aspenWorst)}</span>
-      </div>
-    </div>`;
-
-  // KPI row (without a separate overall tile — that's now the hero)
-  const kpis = `
-    <div class="kpiRow">
-      <div class="kpi"><div class="label">BMI</div><div class="value">${computed.bmi.toFixed(1)}</div></div>
-      <div class="kpi"><div class="label">Phos ${computed.phosDropPct >= 0 ? "drop" : "rise"}</div><div class="value">${dropLabel(computed.phosDropPct)}</div></div>
-      <div class="kpi"><div class="label">Qualitative risk factors</div><div class="value">${qualitative.length}</div></div>
-    </div>`;
-
-  const niceHtml = `
-    <h3>NICE criteria (adult)</h3>
-    <ul>
-      <li>Major flags: ${nice.majorFlags.length ? escapeHtml(nice.majorFlags.join("; ")) : "none"}</li>
-      <li>Minor flags: ${nice.minorFlags.length ? escapeHtml(nice.minorFlags.join("; ")) : "none"}</li>
-    </ul>`;
-
-  const aspenHtml = `
-    <h3>ASPEN electrolyte shift severity</h3>
-    <ul>
-      <li>Phosphate: ${escapeHtml(computed.phosSev)} (${dropLabel(computed.phosDropPct)})</li>
-      <li>Potassium: ${isFinite(computed.kDropPct) ? `${escapeHtml(computed.kSev)} (${dropLabel(computed.kDropPct)})` : "n/a — enter current K"}</li>
-      <li>Magnesium: ${isFinite(computed.mgDropPct) ? `${escapeHtml(computed.mgSev)} (${dropLabel(computed.mgDropPct)})` : "n/a — enter current Mg"}</li>
-    </ul>`;
-
-  el.results.innerHTML = `<div class="result-section">${kpis}${niceHtml}${aspenHtml}</div>`;
-
-  // Plan
-  el.plan.innerHTML = `
-    <h3>Nutrition</h3>
-    <ul>
-      <li>${escapeHtml(plan.feed?.start || "n/a")}</li>
-      <li>${escapeHtml(plan.feed?.advance || "n/a")}</li>
-    </ul>
-    <h3>Thiamine / vitamins</h3>
-    <p>${escapeHtml(plan.thiamine)}</p>
-    <h3>Monitoring</h3>
-    <ul>${plan.monitor.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
-    <h3>Electrolytes (framework)</h3>
-    <ul>${plan.electrolytes.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
-    <h3>Consult triggers</h3>
-    <ul>${plan.consults.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
-
-  el.emrBlock.textContent = buildEMR(
-    i, computed,
-    { badge, imminentFlags: imminentFlagsArr, nice, aspenWorst: computed.aspenWorst, qualitative },
+  const noteText = buildAdultNote({
+    setting: $("a_setting").value, weightKg, heightCm, bmi, bmiClass: bmiC, wtLossPct, daysNoIntake,
+    phosBase, phosNow, phosDropLabel: dropLabel(phosDropPct),
+    kLine: isFinite(kNow) ? `${kBase.toFixed(2)} -> ${kNow.toFixed(2)} (${dropLabel(kDropPct)})` : null,
+    mgLine: isFinite(mgNow) ? `${mgBase.toFixed(2)} -> ${mgNow.toFixed(2)} (${dropLabel(mgDropPct)})` : null,
+    aspen, nice, rsSeverityWorst, imminentFlags: imminent, overallBadge: badge,
+    energy: energy ? { bmr: energy.bmr, needs: energy.needs, factor: energy.factor, intakeKcal: energy.intakeKcal, balance: energy.balance, starvation: energy.starvation } : null,
     plan
-  );
+  });
 
-  el.status.textContent = "Done.";
-  el.status.style.color = "var(--ok)";
-
-  // Switch to results tab on mobile
-  if (window.innerWidth < 700) switchTab("results");
-  else document.getElementById("resultsCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  renderResults(document.querySelector('[data-results="adult"]'), { heroBadge: badge, heroSub, sections, plan, noteText });
+  status.textContent = "Done."; status.style.color = "var(--ok)";
+  saveAll();
 }
 
-// ── Form state ────────────────────────────────────────────
-function collectFormState() {
-  const ids = [
-    "patientType","setting",
-    "weight","weightUnit","height","heightUnit","usualWeight","usualWeightUnit",
-    "daysNoIntake","intakeBand","wtLossWindow",
-    "phosBase","phosUnit","phosNow","phosUnitNow","kBase","mgBase","kNow","mgNow",
-    "albumin","prealbumin","lactate",
-    "apache","sofa","gcs"
-  ];
-  const checks = [
-    "rfAlcohol","rfDiuretics","rfInsulin","rfChemo","rfAntacids","rfStarvation","rfVomiting","rfEdema","rfSystemic"
-  ];
-  const state = {};
-  ids.forEach(id => state[id] = $(id).value);
-  checks.forEach(id => state[id] = $(id).checked);
-  return state;
+// ── PEDIATRIC calculate ────────────────────────────────────
+function runPeds() {
+  const status = document.querySelector('[data-status="peds"]');
+  const sex = $("p_sex").value;
+  const ageYears = ageToYears(num("p_age"), $("p_ageUnit").value);
+  const weightKg = weightToKg(num("p_weight"), $("p_weightUnit").value);
+  const heightCm = $("p_height").value ? heightToCm(num("p_height"), $("p_heightUnit").value) : NaN;
+  const usualKg  = $("p_usualWeight").value ? weightToKg(num("p_usualWeight"), $("p_usualWeightUnit").value) : NaN;
+  const factor = parseFloat($("p_factor").value);
+  const intakeKcal = $("p_intakeKcal").value ? num("p_intakeKcal") : NaN;
+  const daysLowIntake = $("p_daysLowIntake").value ? intVal("p_daysLowIntake") : NaN;
+
+  const errs = [];
+  if (!(ageYears > 0)) errs.push("age");
+  if (!(weightKg > 0)) errs.push("weight");
+  if (errs.length) { status.textContent = "Required: " + errs.join(", "); status.style.color = "var(--bad)"; return; }
+
+  const bmi = isFinite(heightCm) ? calcBMI(weightKg, heightCm) : NaN;
+  const wtLossPct = isFinite(usualKg) ? percentWeightLoss(weightKg, usualKg) : NaN;
+
+  // z-scores
+  const whz = $("p_whz").value ? num("p_whz") : NaN;
+  const bmiZ = $("p_bmiZ").value ? num("p_bmiZ") : NaN;
+  const muacZ = $("p_muacZ").value ? num("p_muacZ") : NaN;
+  const lhaZ = $("p_lhaZ").value ? num("p_lhaZ") : NaN;
+  const zDecline = $("p_zDecline").value ? num("p_zDecline") : NaN;
+  const velocityPct = $("p_velocityPct").value ? num("p_velocityPct") : NaN;
+
+  // labs
+  const phosBase = $("p_phosBase").value ? phosToMmolL(num("p_phosBase"), $("p_phosUnit").value) : NaN;
+  const phosNow  = $("p_phosNow").value ? phosToMmolL(num("p_phosNow"), $("p_phosUnitNow").value) : NaN;
+  const kBase = $("p_kBase").value ? num("p_kBase") : NaN;
+  const kNow = $("p_kNow").value ? num("p_kNow") : NaN;
+  const phosDropPct = percentDrop(phosBase, phosNow);
+  const kDropPct = percentDrop(kBase, kNow);
+  const rsSeverityWorst = ["Severe","Moderate","Mild","None"].find(s =>
+    [rsSeverityFromDrop(phosDropPct), rsSeverityFromDrop(kDropPct)].includes(s)) || "None";
+
+  const energy = computeEnergy({ sex, ageYears, weightKg, heightCm, factor, intakeKcal, daysOfDeficit: daysLowIntake, bmi, wtLossPct, isPeds: true });
+  const pctMet = energy && energy.balance ? energy.balance.pctMet : NaN;
+
+  // Pediatric malnutrition (AND/ASPEN). Intake adequacy uses the computed
+  // % of needs when a current intake was entered.
+  const maln = pediatricMalnutrition({
+    whz, bmiZ, lhaZ, muacZ,
+    wtLossUBWpct: wtLossPct, velocityPct, zDecline,
+    intakePctOfNeed: pctMet
+  });
+
+  // ASPEN peds refeeding risk
+  const lytesSel = $("p_lytes").value;
+  const zChange = [whz, bmiZ].find(isFinite); // change-from-baseline z (best available)
+  const pedsRisk = aspenPedsRisk({
+    zChangeFromBaseline: zChange,
+    velocityPct,
+    daysLowIntake, intakePctMet: pctMet,
+    lytesMinimal: lytesSel === "minimal", lytesSignificant: lytesSel === "significant",
+    comorbidityMild: $("p_comorbidity").value === "mild",
+    comorbidityMod: $("p_comorbidity").value === "mod",
+    comorbiditySevere: $("p_comorbidity").value === "severe"
+  });
+  const imminent = imminentFlags({ phosNow_mmolL: phosNow, phosDropPct, kDropPct, mgDropPct: NaN });
+  const riskLabel = overallRiskLabel({ aspenLevel: pedsRisk.level, rsSeverityWorst, imminentCount: imminent.length, niceHighRisk: false });
+  const badge = labelToBadge(riskLabel);
+
+  const plan = buildPlan({ patientType: "peds", setting: $("p_setting").value, weightKg, riskLevel: riskLabel, niceExtreme: false, rsSeverityWorst, imminent: imminent.length > 0 });
+
+  // Sections
+  let sections = `<div class="kpiRow">
+    <div class="kpi"><div class="label">Weight</div><div class="value">${weightKg.toFixed(1)}</div><div class="label">kg</div></div>
+    ${isFinite(bmi) ? `<div class="kpi"><div class="label">BMI</div><div class="value">${bmi.toFixed(1)}</div></div>` : ""}
+    ${isFinite(wtLossPct) ? `<div class="kpi"><div class="label">Wt loss (UBW)</div><div class="value">${dropLabel(wtLossPct)}</div></div>` : ""}
+  </div>`;
+
+  if (maln.overall) {
+    sections += `<h3>Malnutrition grade (AND/ASPEN 2014)</h3><p><span class="badge ${malnutritionBadgeClass(maln.overall)}">${escapeHtml(maln.overall)} malnutrition</span> <span class="badge muted">${escapeHtml(maln.context)}</span></p><ul>`;
+    sections += maln.indicators.map(ind => `<li>${escapeHtml(ind.name)}: <strong>${escapeHtml(ind.grade)}</strong>${isFinite(ind.value) ? ` (${ind.value})` : ""}</li>`).join("");
+    sections += `</ul><div class="work-ref">Graded by the single most severe indicator. Source: ${refLink(maln.ref)}</div>`;
+  } else {
+    sections += `<h3>Malnutrition grade (AND/ASPEN 2014)</h3><p class="disclaimer">Enter z-scores or growth-trend data to grade malnutrition.</p>`;
+  }
+
+  sections += `<h3>ASPEN 2020 pediatric refeeding risk</h3><p><span class="badge ${badge.cls}">${escapeHtml(pedsRisk.level === "none" ? "Not at increased risk" : pedsRisk.level + " risk")}</span></p><ul>`;
+  sections += pedsRisk.categories.length ? pedsRisk.categories.map(c => `<li>${escapeHtml(c.name)} <span class="badge muted">${escapeHtml(c.tier)}</span></li>`).join("") : `<li>No criteria met from entered data</li>`;
+  sections += `</ul><div class="work-ref">Significant = any 1; Moderate = any 2; Mild = any 3 categories. Source: ${refLink(pedsRisk.ref)}</div>`;
+
+  if (isFinite(phosDropPct)) {
+    sections += `<h3>Electrolyte-shift severity (ASPEN)</h3><ul><li>Phosphate: ${escapeHtml(rsSeverityFromDrop(phosDropPct) || "n/a")} (${dropLabel(phosDropPct)})</li>${isFinite(kDropPct) ? `<li>Potassium: ${escapeHtml(rsSeverityFromDrop(kDropPct))} (${dropLabel(kDropPct)})</li>` : ""}</ul>`;
+    sections += calcDetails("Show calculation — phosphate % drop", [`(${phosBase.toFixed(2)} − ${phosNow.toFixed(2)}) ÷ ${phosBase.toFixed(2)} × 100 = ${dropLabel(phosDropPct)}`], REFS.aspen2020);
+  }
+  sections += renderEnergy(energy);
+
+  const heroSub = `${imminent.map(x => `<span class="badge bad">${escapeHtml(x)}</span>`).join("")}
+    ${maln.overall ? `<span class="badge ${malnutritionBadgeClass(maln.overall)}">Malnutrition: ${escapeHtml(maln.overall)}</span>` : ""}
+    <span class="badge ${badge.cls}">RS: ${escapeHtml(pedsRisk.level)}</span>`;
+
+  const noteText = buildPedsNote({
+    ageYears, sex, weightKg, heightCm, bmi, wtLossPct,
+    maln, pedsRisk, rsSeverityWorst, imminentFlags: imminent, overallBadge: badge,
+    phosBase: isFinite(phosBase) ? phosBase : null, phosNow: isFinite(phosNow) ? phosNow : null,
+    phosDropLabel: dropLabel(phosDropPct),
+    energy: energy ? { bmr: energy.bmr, needs: energy.needs, factor: energy.factor, intakeKcal: energy.intakeKcal, balance: energy.balance, starvation: energy.starvation } : null,
+    plan
+  });
+
+  renderResults(document.querySelector('[data-results="peds"]'), { heroBadge: badge, heroSub, sections, plan, noteText });
+  status.textContent = "Done."; status.style.color = "var(--ok)";
+  saveAll();
 }
 
-function restoreFormState(state) {
-  if (!state) return;
-  Object.keys(state).forEach(k => {
-    const node = $(k);
-    if (!node) return;
-    if (node.type === "checkbox") node.checked = !!state[k];
-    else node.value = state[k];
+// ── References (About) ─────────────────────────────────────
+function renderAboutRefs() {
+  const order = ["aspen2020","becker2014","nice","schofield","mifflin","friedli2018","whoBmi"];
+  $("aboutRefs").innerHTML = `<ul>${order.map(k => {
+    const r = REFS[k];
+    return `<li><a href="${r.url}" target="_blank" rel="noopener">${escapeHtml(r.label)}</a> — ${escapeHtml(r.cite)}${r.alt ? ` · <a href="${r.alt}" target="_blank" rel="noopener">alt</a>` : ""}</li>`;
+  }).join("")}</ul>`;
+}
+
+// ── Persistence ────────────────────────────────────────────
+const FIELD_IDS = [
+  "a_setting","a_sex","a_age","a_weight","a_weightUnit","a_height","a_heightUnit","a_usualWeight","a_usualWeightUnit",
+  "a_daysNoIntake","a_intakeKcal","a_factor","a_phosBase","a_phosUnit","a_phosNow","a_phosUnitNow","a_kBase","a_mgBase","a_kNow","a_mgNow",
+  "p_setting","p_sex","p_age","p_ageUnit","p_weight","p_weightUnit","p_height","p_heightUnit","p_usualWeight","p_usualWeightUnit",
+  "p_daysLowIntake","p_intakeKcal","p_factor","p_whz","p_bmiZ","p_muacZ","p_lhaZ","p_zDecline","p_velocityPct",
+  "p_phosBase","p_phosUnit","p_phosNow","p_phosUnitNow","p_lytes","p_kBase","p_kNow","p_comorbidity"
+];
+const CHECK_IDS = ["a_rfAlcohol","a_rfDiuretics","a_rfInsulin","a_rfChemo","a_rfAntacids","a_rfStarvation","a_fatLossMod","a_fatLossSevere","a_muscleLossMild","a_muscleLossSevere","a_comorbidityMod","a_comorbiditySevere"];
+
+function saveAll() {
+  const s = {};
+  FIELD_IDS.forEach(id => { const n = $(id); if (n) s[id] = n.value; });
+  CHECK_IDS.forEach(id => { const n = $(id); if (n) s[id] = n.checked; });
+  saveState(s);
+}
+function restoreAll() {
+  const s = loadState(); if (!s) return;
+  Object.keys(s).forEach(k => {
+    const n = $(k); if (!n) return;
+    if (n.type === "checkbox") n.checked = !!s[k]; else n.value = s[k];
   });
 }
 
-// ── Export / copy / print / new ───────────────────────────
-function exportJSON() {
-  const i = getInputs();
-  const payload = { timestampISO: new Date().toISOString(), inputs: i, computed: computeAll(i) };
-  const a = Object.assign(document.createElement("a"), {
-    href: URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" })),
-    download: "refeeding-risk-export.json"
-  });
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
+// ── Wire up ────────────────────────────────────────────────
+document.querySelector('[data-calc="adult"]').addEventListener("click", runAdult);
+document.querySelector('[data-calc="peds"]').addEventListener("click", runPeds);
+$("btnPrint").addEventListener("click", () => window.print());
+$("btnNew").addEventListener("click", () => { clearState(); location.reload(); });
+document.addEventListener("input", saveAll);
 
-function copyEMR() {
-  const text = el.emrBlock.textContent || "";
-  if (!text.trim()) { showToast("Run the calculator first"); return; }
-  navigator.clipboard.writeText(text)
-    .then(() => showToast("Copied to clipboard"))
-    .catch(() => showToast("Copy failed — try long-press"));
-}
+restoreAll();
+renderAboutRefs();
 
-function renderReferences() {
-  el.refs.innerHTML = `
-    <ul>
-      <li><strong>ASPEN</strong>: da Silva JSV, et al. <em>ASPEN consensus recommendations for refeeding syndrome.</em> Nutr Clin Pract. 2020;35(2):178–195.</li>
-      <li><strong>NICE</strong>: <em>Nutrition support for adults: oral nutrition support, enteral tube feeding and parenteral nutrition.</em> NICE guideline (2006; updated 2017).</li>
-      <li><strong>Algorithm paper</strong>: Friedli N, et al. <em>Management and prevention of refeeding syndrome in medical inpatients.</em> Nutrition. 2018;47:13–20.</li>
-      <li><strong>Critical illness nomogram</strong>: Jing C, et al. <em>Development and validation of a risk prediction model for refeeding syndrome in adults with critical illness.</em> Clinical Nutrition. 2025;55:282–292.</li>
-    </ul>`;
-}
-
-// ── Wire up ───────────────────────────────────────────────
-el.btnCalc.addEventListener("click", run);
-el.btnCopy.addEventListener("click", copyEMR);
-el.emrBlock.addEventListener("click", copyEMR);
-el.btnPrint.addEventListener("click", () => window.print());
-el.btnExport.addEventListener("click", exportJSON);
-el.btnNew.addEventListener("click", () => { clearState(); location.reload(); });
-
-document.addEventListener("input", () => saveState(collectFormState()));
-
-restoreFormState(loadState());
-renderReferences();
-
-// ── Service worker ────────────────────────────────────────
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").catch(() => {});
-  });
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
 }

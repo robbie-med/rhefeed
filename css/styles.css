@@ -50,7 +50,7 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  padding-bottom: calc(var(--tab-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ── Top bar ────────────────────────────────────────────── */
@@ -78,6 +78,36 @@ body {
   margin-top: 1px;
 }
 .topbar-actions { display: flex; gap: .4rem; flex-shrink: 0; }
+
+/* ── Pane navigation (Adult / Peds / About) ─────────────── */
+.pane-nav {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  display: flex;
+  gap: .25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: .4rem .75rem 0;
+  max-width: 980px;
+  margin: 0 auto;
+}
+.pane-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: .65rem .5rem;
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.pane-tab:hover { color: var(--text); }
+.pane-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+[data-pane-body].hidden { display: none; }
 
 /* ── Container ──────────────────────────────────────────── */
 .container {
@@ -313,9 +343,42 @@ input:focus, select:focus {
   border: 1px solid transparent;
   margin: .2rem .2rem 0 0;
 }
-.badge.ok   { background: var(--ok-bg);   border-color: var(--ok);   color: var(--ok);   }
-.badge.warn { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
-.badge.bad  { background: var(--bad-bg);  border-color: var(--bad);  color: var(--bad);  }
+.badge.ok    { background: var(--ok-bg);   border-color: var(--ok);   color: var(--ok);   }
+.badge.warn  { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
+.badge.bad   { background: var(--bad-bg);  border-color: var(--bad);  color: var(--bad);  }
+.badge.muted { background: var(--surface2); border-color: var(--border); color: var(--muted); }
+
+/* ── Transparency: "show calculation" ───────────────────── */
+.calc {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: .5rem 0 .9rem;
+  font-size: .82rem;
+}
+.calc summary {
+  cursor: pointer;
+  padding: .5rem .75rem;
+  font-weight: 600;
+  color: var(--accent);
+  list-style: none;
+  user-select: none;
+}
+.calc summary::-webkit-details-marker { display: none; }
+.calc summary::before { content: "▸ "; }
+.calc[open] summary::before { content: "▾ "; }
+.calc-body { padding: 0 .85rem .7rem; }
+.work-line {
+  font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+  font-size: .78rem;
+  color: var(--text);
+  padding: .15rem 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.work-ref { font-size: .78rem; color: var(--muted); margin-top: .4rem; }
+.work-ref a { color: var(--accent); text-decoration: none; }
+.work-ref a:hover { text-decoration: underline; }
 
 /* ── Divider ────────────────────────────────────────────── */
 .divider { height: 1px; background: var(--border); margin: 1rem 0; }
@@ -369,7 +432,7 @@ input:focus, select:focus {
 /* ── Toast ──────────────────────────────────────────────── */
 .toast {
   position: fixed;
-  bottom: calc(var(--tab-h) + 12px + env(safe-area-inset-bottom));
+  bottom: calc(16px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%) translateY(8px);
   background: var(--text);
@@ -389,51 +452,12 @@ input:focus, select:focus {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ── Mobile tab bar ─────────────────────────────────────── */
-.tab-bar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  height: var(--tab-h);
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  z-index: 150;
-  padding-bottom: env(safe-area-inset-bottom);
-}
-.tab-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: .72rem;
-  font-weight: 600;
-  color: var(--muted);
-  transition: color .15s;
-}
-.tab-btn.active { color: var(--accent); }
-.tab-btn svg { width: 22px; height: 22px; }
-
-/* Tab pane visibility */
-[data-tab-pane] { display: block; }
-[data-tab-pane].hidden { display: none; }
-
-/* On wider screens, always show both panes */
-@media (min-width: 700px) {
-  .tab-bar { display: none; }
-  [data-tab-pane].hidden { display: block !important; }
-  body { padding-bottom: 0; }
-}
-
 /* ── Print ──────────────────────────────────────────────── */
 @media print {
-  .topbar-actions, .run-row, .tab-bar, .toast { display: none !important; }
+  .topbar-actions, .run-row, .pane-nav, .toast { display: none !important; }
   .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
   body { background: #fff; color: #000; padding-bottom: 0; }
-  [data-tab-pane].hidden { display: block !important; }
+  [data-pane-body].hidden { display: block !important; }
+  .calc[open] .calc-body { display: block; }
   .copybox { border: 1px solid #ccc; }
 }

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Refeeding Syndrome One-Stop</title>
-  <meta name="description" content="Offline-capable refeeding syndrome risk calculator and management plan generator. Educational use only." />
+  <title>Refeeding &amp; Malnutrition — One-Stop</title>
+  <meta name="description" content="Evidence-based refeeding syndrome risk, pediatric malnutrition grading, caloric needs, and copy-to-chart assessment & plan. Educational use only." />
   <meta name="theme-color" content="#0f4c81" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -18,302 +18,373 @@
 
 <header class="topbar">
   <div>
-    <h1>Refeeding Syndrome One-Stop</h1>
-    <div class="topbar-sub">Educational · offline-capable · not a substitute for clinical judgment</div>
+    <h1>Refeeding &amp; Malnutrition — One-Stop</h1>
+    <div class="topbar-sub">Evidence-based · offline-capable · not a substitute for clinical judgment</div>
   </div>
   <div class="topbar-actions">
-    <button id="btnNew"    class="btn ghost">New</button>
-    <button id="btnPrint"  class="btn ghost">Print</button>
-    <button id="btnExport" class="btn ghost">Export</button>
+    <button id="btnNew"   class="btn ghost">New</button>
+    <button id="btnPrint" class="btn ghost">Print</button>
   </div>
 </header>
 
+<!-- Top pane navigation -->
+<nav class="pane-nav" role="tablist" aria-label="Calculator">
+  <button class="pane-tab active" role="tab" data-pane="adult" aria-selected="true">Adult</button>
+  <button class="pane-tab" role="tab" data-pane="peds" aria-selected="false">Pediatric</button>
+  <button class="pane-tab" role="tab" data-pane="about" aria-selected="false">About</button>
+</nav>
+
 <main class="container">
 
-  <!-- ── INPUTS TAB ─────────────────────────────────── -->
-  <div data-tab-pane="inputs">
+  <!-- ══════════════ ADULT PANE ══════════════ -->
+  <section data-pane-body="adult">
 
-    <!-- Mode -->
     <section class="card">
-      <p class="card-title">Mode</p>
-      <div class="grid2">
+      <p class="card-title">Context</p>
+      <div class="grid3">
         <div class="field">
-          <label class="field-label" for="patientType">
-            <span class="req-dot"></span>Patient type
-          </label>
-          <select id="patientType" required>
-            <option value="adult" selected>Adult</option>
-            <option value="peds">Pediatrics</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="field-label" for="setting">Setting</label>
-          <select id="setting">
+          <label class="field-label" for="a_setting">Setting</label>
+          <select id="a_setting">
             <option value="floor" selected>Floor / Ward</option>
             <option value="icu">ICU</option>
             <option value="ed">ED</option>
           </select>
         </div>
+        <div class="field">
+          <label class="field-label" for="a_sex">Sex</label>
+          <select id="a_sex">
+            <option value="male" selected>Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="a_age">Age (years)</label>
+          <input id="a_age" type="number" step="1" inputmode="numeric" placeholder="e.g. 54" />
+        </div>
       </div>
     </section>
 
-    <!-- Anthropometrics -->
     <section class="card">
       <p class="card-title">Anthropometrics &amp; intake</p>
       <div class="grid3">
         <div class="field">
-          <label class="field-label" for="weight">
-            <span class="req-dot"></span>Weight
-          </label>
+          <label class="field-label" for="a_weight"><span class="req-dot"></span>Weight</label>
           <div class="inline-pair">
-            <input id="weight" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 56.7" required />
-            <select id="weightUnit">
-              <option value="kg" selected>kg</option>
-              <option value="lb">lb</option>
-            </select>
+            <input id="a_weight" type="number" step="0.1" inputmode="decimal" placeholder="56.7" required />
+            <select id="a_weightUnit"><option value="kg" selected>kg</option><option value="lb">lb</option></select>
           </div>
         </div>
         <div class="field">
-          <label class="field-label" for="height">
-            <span class="req-dot"></span>Height
-          </label>
+          <label class="field-label" for="a_height"><span class="req-dot"></span>Height</label>
           <div class="inline-pair">
-            <input id="height" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 170" required />
-            <select id="heightUnit">
-              <option value="cm" selected>cm</option>
-              <option value="in">in</option>
-            </select>
+            <input id="a_height" type="number" step="0.1" inputmode="decimal" placeholder="170" required />
+            <select id="a_heightUnit"><option value="cm" selected>cm</option><option value="in">in</option></select>
           </div>
         </div>
         <div class="field">
-          <label class="field-label" for="usualWeight">Usual weight</label>
+          <label class="field-label" for="a_usualWeight">Usual weight</label>
           <div class="inline-pair">
-            <input id="usualWeight" type="number" step="0.1" inputmode="decimal" placeholder="optional" />
-            <select id="usualWeightUnit">
-              <option value="kg" selected>kg</option>
-              <option value="lb">lb</option>
-            </select>
+            <input id="a_usualWeight" type="number" step="0.1" inputmode="decimal" placeholder="optional" />
+            <select id="a_usualWeightUnit"><option value="kg" selected>kg</option><option value="lb">lb</option></select>
           </div>
         </div>
       </div>
-
       <div class="grid3" style="margin-top:.85rem">
         <div class="field">
-          <label class="field-label" for="daysNoIntake">
-            <span class="req-dot"></span>Days with little/no intake
-          </label>
-          <input id="daysNoIntake" type="number" step="1" inputmode="numeric" placeholder="e.g. 7" required />
+          <label class="field-label" for="a_daysNoIntake"><span class="req-dot"></span>Days little/no intake</label>
+          <input id="a_daysNoIntake" type="number" step="1" inputmode="numeric" placeholder="7" required />
         </div>
         <div class="field">
-          <label class="field-label" for="intakeBand">Intake estimate (optional)</label>
-          <select id="intakeBand">
-            <option value="">(optional)</option>
-            <option value="none">Near zero</option>
-            <option value="lt50">&lt;50% needs</option>
-            <option value="lt25">&lt;25% needs</option>
-            <option value="lt500">&lt;500 kcal/day</option>
-          </select>
+          <label class="field-label" for="a_intakeKcal">Current intake (kcal/day)</label>
+          <input id="a_intakeKcal" type="number" step="10" inputmode="numeric" placeholder="optional, e.g. 400" />
         </div>
         <div class="field">
-          <label class="field-label" for="wtLossWindow">Wt-loss time window (optional)</label>
-          <select id="wtLossWindow">
-            <option value="">(optional)</option>
-            <option value="3mo">~3 months</option>
-            <option value="6mo">~6 months</option>
-          </select>
+          <label class="field-label" for="a_factor">Activity / stress factor</label>
+          <select id="a_factor"></select>
         </div>
       </div>
     </section>
 
-    <!-- Labs -->
     <section class="card">
       <p class="card-title">Labs — baseline &amp; current</p>
-      <p class="disclaimer" style="margin-bottom:.75rem">Minimum: baseline P/K/Mg + current P. Add current K/Mg for full ASPEN severity.</p>
-
+      <p class="disclaimer" style="margin-bottom:.75rem">Minimum: baseline P/K/Mg + current P. Add current K/Mg for full electrolyte-shift severity.</p>
       <div class="grid3">
         <div class="field">
-          <label class="field-label" for="phosBase">
-            <span class="req-dot"></span>Baseline phosphate
-          </label>
+          <label class="field-label" for="a_phosBase"><span class="req-dot"></span>Baseline phosphate</label>
           <div class="inline-pair">
-            <input id="phosBase" type="number" step="0.01" inputmode="decimal" required />
-            <select id="phosUnit">
-              <option value="mmolL" selected>mmol/L</option>
-              <option value="mgdL">mg/dL</option>
-            </select>
+            <input id="a_phosBase" type="number" step="0.01" inputmode="decimal" required />
+            <select id="a_phosUnit"><option value="mmolL" selected>mmol/L</option><option value="mgdL">mg/dL</option></select>
           </div>
         </div>
         <div class="field">
-          <label class="field-label" for="phosNow">
-            <span class="req-dot"></span>Current phosphate
-          </label>
+          <label class="field-label" for="a_phosNow"><span class="req-dot"></span>Current phosphate</label>
           <div class="inline-pair">
-            <input id="phosNow" type="number" step="0.01" inputmode="decimal" required />
-            <select id="phosUnitNow">
-              <option value="mmolL" selected>mmol/L</option>
-              <option value="mgdL">mg/dL</option>
-            </select>
+            <input id="a_phosNow" type="number" step="0.01" inputmode="decimal" required />
+            <select id="a_phosUnitNow"><option value="mmolL" selected>mmol/L</option><option value="mgdL">mg/dL</option></select>
           </div>
         </div>
         <div class="field">
-          <label class="field-label" for="kBase">
-            <span class="req-dot"></span>Baseline K (mmol/L)
-          </label>
-          <input id="kBase" type="number" step="0.01" inputmode="decimal" required />
+          <label class="field-label" for="a_kBase"><span class="req-dot"></span>Baseline K (mmol/L)</label>
+          <input id="a_kBase" type="number" step="0.01" inputmode="decimal" required />
         </div>
       </div>
-
       <div class="grid3" style="margin-top:.85rem">
         <div class="field">
-          <label class="field-label" for="mgBase">
-            <span class="req-dot"></span>Baseline Mg (mmol/L)
-          </label>
-          <input id="mgBase" type="number" step="0.01" inputmode="decimal" required />
+          <label class="field-label" for="a_mgBase"><span class="req-dot"></span>Baseline Mg (mmol/L)</label>
+          <input id="a_mgBase" type="number" step="0.01" inputmode="decimal" required />
         </div>
         <div class="field">
-          <label class="field-label" for="kNow">Current K (mmol/L)</label>
-          <input id="kNow" type="number" step="0.01" inputmode="decimal" />
+          <label class="field-label" for="a_kNow">Current K (mmol/L)</label>
+          <input id="a_kNow" type="number" step="0.01" inputmode="decimal" />
         </div>
         <div class="field">
-          <label class="field-label" for="mgNow">Current Mg (mmol/L)</label>
-          <input id="mgNow" type="number" step="0.01" inputmode="decimal" />
-        </div>
-      </div>
-
-      <!-- Optional labs (collapsible) -->
-      <button class="section-toggle" aria-expanded="false" aria-controls="optLabs">
-        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
-        Optional labs (albumin, prealbumin, lactate)
-      </button>
-      <div class="collapsible" id="optLabs" hidden>
-        <div class="grid3">
-          <div class="field">
-            <label class="field-label" for="albumin">Albumin (g/L)</label>
-            <input id="albumin" type="number" step="1" inputmode="numeric" />
-          </div>
-          <div class="field">
-            <label class="field-label" for="prealbumin">Prealbumin (mg/L)</label>
-            <input id="prealbumin" type="number" step="1" inputmode="numeric" />
-          </div>
-          <div class="field">
-            <label class="field-label" for="lactate">Lactate (mmol/L)</label>
-            <input id="lactate" type="number" step="0.1" inputmode="decimal" />
-          </div>
+          <label class="field-label" for="a_mgNow">Current Mg (mmol/L)</label>
+          <input id="a_mgNow" type="number" step="0.01" inputmode="decimal" />
         </div>
       </div>
     </section>
 
-    <!-- Clinical risk factors -->
     <section class="card">
-      <p class="card-title">Clinical / meds / context</p>
+      <p class="card-title">Clinical / meds / exam (ASPEN &amp; NICE)</p>
       <div class="checks-grid">
-        <label class="check-label"><input id="rfAlcohol"   type="checkbox" /> Alcohol misuse</label>
-        <label class="check-label"><input id="rfDiuretics" type="checkbox" /> Diuretics</label>
-        <label class="check-label"><input id="rfInsulin"   type="checkbox" /> Insulin use</label>
-        <label class="check-label"><input id="rfChemo"     type="checkbox" /> Chemo (recent)</label>
-        <label class="check-label"><input id="rfAntacids"  type="checkbox" /> Antacids (significant)</label>
-        <label class="check-label"><input id="rfStarvation" type="checkbox" /> Eating disorder / starvation</label>
-        <label class="check-label"><input id="rfVomiting"  type="checkbox" /> Vomiting</label>
-        <label class="check-label"><input id="rfEdema"     type="checkbox" /> Peripheral edema / fluid overload</label>
-        <label class="check-label"><input id="rfSystemic"  type="checkbox" /> Life-threatening systemic disease</label>
-      </div>
-
-      <!-- Severity scores (collapsible) -->
-      <button class="section-toggle" aria-expanded="false" aria-controls="optScores" style="margin-top:.75rem">
-        <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
-        Optional severity scores (APACHE II, SOFA, GCS)
-      </button>
-      <div class="collapsible" id="optScores" hidden>
-        <div class="grid3">
-          <div class="field">
-            <label class="field-label" for="apache">APACHE II (adult ICU)</label>
-            <input id="apache" type="number" step="1" inputmode="numeric" />
-          </div>
-          <div class="field">
-            <label class="field-label" for="sofa">SOFA</label>
-            <input id="sofa" type="number" step="1" inputmode="numeric" />
-          </div>
-          <div class="field">
-            <label class="field-label" for="gcs">GCS</label>
-            <input id="gcs" type="number" step="1" inputmode="numeric" />
-          </div>
-        </div>
+        <label class="check-label"><input id="a_rfAlcohol" type="checkbox" /> Alcohol misuse</label>
+        <label class="check-label"><input id="a_rfDiuretics" type="checkbox" /> Diuretics</label>
+        <label class="check-label"><input id="a_rfInsulin" type="checkbox" /> Insulin use</label>
+        <label class="check-label"><input id="a_rfChemo" type="checkbox" /> Chemo (recent)</label>
+        <label class="check-label"><input id="a_rfAntacids" type="checkbox" /> Antacids</label>
+        <label class="check-label"><input id="a_rfStarvation" type="checkbox" /> Eating disorder / starvation</label>
+        <label class="check-label"><input id="a_fatLossMod" type="checkbox" /> Moderate fat loss</label>
+        <label class="check-label"><input id="a_fatLossSevere" type="checkbox" /> Severe fat loss</label>
+        <label class="check-label"><input id="a_muscleLossMild" type="checkbox" /> Mild–mod muscle loss</label>
+        <label class="check-label"><input id="a_muscleLossSevere" type="checkbox" /> Severe muscle loss</label>
+        <label class="check-label"><input id="a_comorbidityMod" type="checkbox" /> Moderate comorbidity</label>
+        <label class="check-label"><input id="a_comorbiditySevere" type="checkbox" /> Severe comorbidity</label>
       </div>
     </section>
 
-    <!-- Run -->
     <section class="card">
       <div class="run-row">
-        <button id="btnCalc" class="btn primary">Calculate &amp; generate plan</button>
-        <span id="status" class="status-msg"></span>
+        <button class="btn primary" data-calc="adult">Calculate &amp; generate note</button>
+        <span class="status-msg" data-status="adult"></span>
       </div>
     </section>
 
-  </div><!-- /inputs pane -->
+    <div data-results="adult"></div>
+  </section>
 
-  <!-- ── RESULTS TAB ────────────────────────────────── -->
-  <div data-tab-pane="results" class="hidden">
-
-    <section class="card" id="resultsCard">
-      <p class="card-title">Risk assessment</p>
-      <div id="heroVerdictWrap"></div>
-      <div id="results"></div>
-    </section>
+  <!-- ══════════════ PEDIATRIC PANE ══════════════ -->
+  <section data-pane-body="peds" class="hidden">
 
     <section class="card">
-      <p class="card-title">Management guidance</p>
-      <div id="plan" class="result-section"></div>
-    </section>
-
-    <section class="card">
-      <p class="card-title">EMR copy block</p>
-      <p class="disclaimer" style="margin-bottom:.5rem">ASCII-only. Click to copy.</p>
-      <pre id="emrBlock" class="copybox" tabindex="0" role="button" aria-label="Click to copy EMR block"></pre>
-      <div style="margin-top:.6rem">
-        <button id="btnCopy" class="btn outline">Copy block</button>
+      <p class="card-title">Context (not for ≤28 d of life / ≤44 wk corrected GA)</p>
+      <div class="grid3">
+        <div class="field">
+          <label class="field-label" for="p_setting">Setting</label>
+          <select id="p_setting">
+            <option value="floor" selected>Floor / Ward</option>
+            <option value="icu">PICU / NICU step-down</option>
+            <option value="ed">ED</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_sex"><span class="req-dot"></span>Sex</label>
+          <select id="p_sex"><option value="male" selected>Male</option><option value="female">Female</option></select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_age"><span class="req-dot"></span>Age</label>
+          <div class="inline-pair">
+            <input id="p_age" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 7" required />
+            <select id="p_ageUnit"><option value="years" selected>yr</option><option value="months">mo</option></select>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="card">
-      <p class="card-title">References</p>
-      <div id="refs" class="refs"></div>
+      <p class="card-title">Anthropometrics &amp; intake</p>
+      <div class="grid3">
+        <div class="field">
+          <label class="field-label" for="p_weight"><span class="req-dot"></span>Weight</label>
+          <div class="inline-pair">
+            <input id="p_weight" type="number" step="0.01" inputmode="decimal" placeholder="22" required />
+            <select id="p_weightUnit"><option value="kg" selected>kg</option><option value="lb">lb</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_height">Length / Height</label>
+          <div class="inline-pair">
+            <input id="p_height" type="number" step="0.1" inputmode="decimal" placeholder="120" />
+            <select id="p_heightUnit"><option value="cm" selected>cm</option><option value="in">in</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_usualWeight">Usual body weight</label>
+          <div class="inline-pair">
+            <input id="p_usualWeight" type="number" step="0.01" inputmode="decimal" placeholder="optional" />
+            <select id="p_usualWeightUnit"><option value="kg" selected>kg</option><option value="lb">lb</option></select>
+          </div>
+        </div>
+      </div>
+      <div class="grid3" style="margin-top:.85rem">
+        <div class="field">
+          <label class="field-label" for="p_daysLowIntake">Days intake &lt;75% need</label>
+          <input id="p_daysLowIntake" type="number" step="1" inputmode="numeric" placeholder="e.g. 6" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_intakeKcal">Current intake (kcal/day)</label>
+          <input id="p_intakeKcal" type="number" step="10" inputmode="numeric" placeholder="optional" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_factor">Activity / stress factor</label>
+          <select id="p_factor"></select>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <p class="card-title">Z-scores &amp; growth trend (AND/ASPEN malnutrition + ASPEN refeeding)</p>
+      <p class="disclaimer" style="margin-bottom:.75rem">Enter z-scores from your growth-chart system (WHO &lt;2 yr / CDC ≥2 yr). Leave blank if unavailable.</p>
+      <div class="grid3">
+        <div class="field">
+          <label class="field-label" for="p_whz">Weight-for-length/height z</label>
+          <input id="p_whz" type="number" step="0.1" inputmode="decimal" placeholder="e.g. -2.3" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_bmiZ">BMI-for-age z (2–20 yr)</label>
+          <input id="p_bmiZ" type="number" step="0.1" inputmode="decimal" placeholder="e.g. -2.1" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_muacZ">MUAC z</label>
+          <input id="p_muacZ" type="number" step="0.1" inputmode="decimal" placeholder="optional" />
+        </div>
+      </div>
+      <div class="grid3" style="margin-top:.85rem">
+        <div class="field">
+          <label class="field-label" for="p_lhaZ">Length/height-for-age z</label>
+          <input id="p_lhaZ" type="number" step="0.1" inputmode="decimal" placeholder="optional" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_zDecline">Z-scores dropped (trend)</label>
+          <input id="p_zDecline" type="number" step="0.1" inputmode="decimal" placeholder="e.g. 2" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_velocityPct">Wt-gain velocity (% expected, &lt;2 yr)</label>
+          <input id="p_velocityPct" type="number" step="1" inputmode="numeric" placeholder="e.g. 45" />
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <p class="card-title">Labs — baseline &amp; current</p>
+      <div class="grid3">
+        <div class="field">
+          <label class="field-label" for="p_phosBase">Baseline phosphate</label>
+          <div class="inline-pair">
+            <input id="p_phosBase" type="number" step="0.01" inputmode="decimal" />
+            <select id="p_phosUnit"><option value="mmolL" selected>mmol/L</option><option value="mgdL">mg/dL</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_phosNow">Current phosphate</label>
+          <div class="inline-pair">
+            <input id="p_phosNow" type="number" step="0.01" inputmode="decimal" />
+            <select id="p_phosUnitNow"><option value="mmolL" selected>mmol/L</option><option value="mgdL">mg/dL</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_lytes">Pre-feeding K/P/Mg status</label>
+          <select id="p_lytes">
+            <option value="" selected>Normal / not low</option>
+            <option value="minimal">Up to 25% below LLN</option>
+            <option value="significant">25–50% below LLN</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid3" style="margin-top:.85rem">
+        <div class="field">
+          <label class="field-label" for="p_kBase">Baseline K (mmol/L)</label>
+          <input id="p_kBase" type="number" step="0.01" inputmode="decimal" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_kNow">Current K (mmol/L)</label>
+          <input id="p_kNow" type="number" step="0.01" inputmode="decimal" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_comorbidity">Comorbidity severity</label>
+          <select id="p_comorbidity">
+            <option value="" selected>None</option>
+            <option value="mild">Mild</option>
+            <option value="mod">Moderate</option>
+            <option value="severe">Severe</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="run-row">
+        <button class="btn primary" data-calc="peds">Calculate &amp; generate note</button>
+        <span class="status-msg" data-status="peds"></span>
+      </div>
+    </section>
+
+    <div data-results="peds"></div>
+  </section>
+
+  <!-- ══════════════ ABOUT PANE ══════════════ -->
+  <section data-pane-body="about" class="hidden">
+    <section class="card">
+      <p class="card-title">How to use</p>
+      <div class="result-section">
+        <ol style="padding-left:1.2rem;font-size:.9rem">
+          <li>Pick the <strong>Adult</strong> or <strong>Pediatric</strong> tab.</li>
+          <li>Enter anthropometrics, days of poor intake, and baseline + current electrolytes. Optional fields refine the result.</li>
+          <li>Press <strong>Calculate</strong>. You get a risk verdict, caloric-needs &amp; energy-deficit estimate, a degree-of-starvation summary, and (peds) an AND/ASPEN malnutrition grade.</li>
+          <li>Every computed number has a <em>“show calculation”</em> toggle with the formula and substituted values, plus a link to the source.</li>
+          <li>Copy the ASCII <strong>Assessment &amp; Plan</strong> block straight into the chart.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="card">
+      <p class="card-title">What it computes</p>
+      <div class="result-section" style="font-size:.9rem">
+        <ul style="padding-left:1.2rem">
+          <li><strong>Refeeding risk</strong> — ASPEN 2020 adult (Table 3) &amp; pediatric (Table 5) criteria; NICE CG32 (adult); electrolyte-shift severity (mild/moderate/severe by % drop within 5 days).</li>
+          <li><strong>Pediatric malnutrition</strong> — AND/ASPEN 2014 single-point z-scores and multi-point trend indicators.</li>
+          <li><strong>Caloric needs</strong> — Schofield (weight-only, peds) or Mifflin–St Jeor (adults), × activity/stress factor.</li>
+          <li><strong>Energy deficit / degree of starvation</strong> — % of needs met, daily &amp; cumulative deficit, WHO BMI thinness band.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <p class="card-title">References (primary sources)</p>
+      <div id="aboutRefs" class="refs"></div>
     </section>
 
     <section class="card">
       <p class="card-title">Disclaimer</p>
       <p class="disclaimer">
-        This tool provides educational decision support only. It does not replace local protocols, pharmacy guidance,
-        nutrition support teams, or clinician judgment. Always individualize dosing, repletion, fluid strategy, and monitoring.
+        Educational decision support only. It does not replace local protocols, pharmacy guidance, nutrition support
+        teams, or clinician judgment. Thresholds are population-level; always individualize calories, repletion, fluids,
+        and monitoring. Z-scores must be obtained from a validated growth-charting system. Not for neonates ≤28 days
+        of life or ≤44 weeks corrected gestational age.
       </p>
     </section>
-
-  </div><!-- /results pane -->
+  </section>
 
 </main>
 
-<!-- Mobile tab bar -->
-<nav class="tab-bar" role="tablist" aria-label="Navigation">
-  <button class="tab-btn active" role="tab" aria-selected="true"  data-tab="inputs"  id="tabBtnInputs">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
-    </svg>
-    Inputs
-  </button>
-  <button class="tab-btn" role="tab" aria-selected="false" data-tab="results" id="tabBtnResults">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-    </svg>
-    Results
-  </button>
-</nav>
-
-<!-- Toast -->
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script src="js/constants.js"></script>
 <script src="js/units.js"></script>
+<script src="js/energy.js"></script>
+<script src="js/malnutrition.js"></script>
 <script src="js/risk.js"></script>
 <script src="js/plan.js"></script>
+<script src="js/note.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/app.js"></script>
 </body>

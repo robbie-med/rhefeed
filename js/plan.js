@@ -1,105 +1,99 @@
-function feedingStartRecommendation(patientType, riskLevel, weightKg) {
-  // Non-prescriptive guidance: kcal/kg/day bands + advance window
-  if (!isFinite(weightKg) || weightKg <= 0) return null;
+// ─────────────────────────────────────────────────────────────────────────
+// Non-prescriptive management FRAMEWORK (ASPEN 2020 Tables 6 & 7; NICE CG32).
+// Provides initiation ranges, thiamine, monitoring intensity, electrolyte
+// prompts, and consult triggers. Avoids prescriptive repletion dosing tables.
+// ─────────────────────────────────────────────────────────────────────────
 
-  // Pediatrics: conservative messaging + local protocol
+// Feeding initiation. Adults use kcal/kg/day bands; peds use % of goal + GIR.
+function feedingStart({ patientType, riskLevel, weightKg, niceExtreme }) {
+  if (!isFinite(weightKg) || weightKg <= 0) return null;
+  const F = FEEDING;
+
   if (patientType === "peds") {
+    const p = F.peds;
     return {
-      headline: "Pediatrics: use local protocol / nutrition team",
-      start: "Consider conservative initiation if high risk; coordinate with peds nutrition/pharmacy.",
-      advance: `Advance gradually over ~${FEEDING.advance_days_min}–${FEEDING.advance_days_max} days with close electrolyte monitoring.`,
-      kcalRange: null
+      ref: REFS.aspen2020,
+      headline: "Pediatric initiation (ASPEN 2020)",
+      lines: [
+        `Initiate nutrition at a maximum of ${p.startPctGoalLow}–${p.startPctGoalHigh}% of goal.`,
+        `If using IV dextrose: start GIR ~${p.girStartLow}–${p.girStartHigh} mg/kg/min, advance ${F.peds.girAdvance} mg/kg/min daily as glucose tolerates, up to ${14}–${p.girMax} mg/kg/min.`,
+        `Advance by ~${F.adult.advancePctGoal}% of goal every 1–2 days; halve if electrolytes drop precipitously.`,
+        `Coordinate with pediatric nutrition support / pharmacy.`
+      ]
     };
   }
 
-  // Adults:
-  let startKcalPerKg = FEEDING.start_kcalPerKg_standardHighRisk;
-  if (riskLevel === "very_high") startKcalPerKg = FEEDING.start_kcalPerKg_low;
+  // Adults
+  const startLow = Math.round(F.adult.startKcalPerKgLow * weightKg);
+  const startHigh = Math.round(F.adult.startKcalPerKgHigh * weightKg);
+  const lines = [];
+  if (niceExtreme) {
+    const ex = Math.round(F.adult.niceExtremeKcalPerKg * weightKg);
+    lines.push(`Extreme risk (NICE: BMI <14 or negligible intake >15 d): start ~${F.adult.niceExtremeKcalPerKg} kcal/kg/day (≈ ${ex} kcal/day).`);
+  }
+  lines.push(`Initiate ~${F.adult.startKcalPerKgLow}–${F.adult.startKcalPerKgHigh} kcal/kg/day (≈ ${startLow}–${startHigh} kcal/day), or 100–150 g dextrose, for the first 24 h.`);
+  lines.push(`Advance by ~${F.adult.advancePctGoal}% of goal every 1–2 days toward full needs over ${F.adult.advanceDaysMin}–${F.adult.advanceDaysMax} days.`);
+  lines.push(`Hold/delay escalation if pre-feeding electrolytes are low until corrected.`);
+  return { ref: REFS.aspen2020, headline: "Adult initiation (ASPEN 2020 / NICE)", lines };
+}
 
-  const startTotal = Math.round(startKcalPerKg * weightKg);
+function thiamineRecommendation(patientType, weightKg) {
+  if (patientType === "peds") {
+    const dose = isFinite(weightKg) ? Math.min(THIAMINE.pedsMgPerKg * weightKg, THIAMINE.pedsMaxMg) : null;
+    return {
+      ref: REFS.aspen2020,
+      text: `Thiamine ${THIAMINE.pedsMgPerKg} mg/kg` +
+            (dose ? ` (≈ ${Math.round(dose)} mg)` : "") +
+            ` to a max of ${THIAMINE.pedsMaxMg} mg/day BEFORE feeding or dextrose-containing IV fluids; continue ${THIAMINE.durationDays} if severe starvation/high risk. Add a complete multivitamin daily.`
+    };
+  }
   return {
-    headline: "Initial calories",
-    start: `Start ~${startKcalPerKg} kcal/kg/day (≈ ${startTotal} kcal/day) and avoid rapid escalation.`,
-    advance: `Advance toward goal over ~${FEEDING.advance_days_min}–${FEEDING.advance_days_max} days if electrolytes stable.`,
-    kcalRange: { kcalPerKg: startKcalPerKg, kcalPerDay: startTotal }
+    ref: REFS.aspen2020,
+    text: `Thiamine ${THIAMINE.adultMg} mg BEFORE feeding or dextrose-containing IV fluids; continue ${THIAMINE.adultMg} mg/day for ${THIAMINE.durationDays} in severe starvation, chronic alcohol use, or signs of deficiency. Add a complete multivitamin daily.`
   };
 }
 
-function monitoringRecommendation(setting, riskFlagsCount) {
-  // Escalate monitoring if ICU or high-risk flags present.
-  const isICU = setting === "icu";
-  const high = riskFlagsCount >= 2;
-
-  if (isICU || high) {
-    return [
-      "Check K/Mg/Phos at least q12–24h for first 72h (more frequent if unstable or repleting aggressively).",
-      "Consider telemetry if severe electrolyte derangements, arrhythmia risk, or severe RS features.",
-      "Strict I/O and daily weights; avoid fluid overload in high-risk patients."
-    ];
-  }
-  return [
-    "Check K/Mg/Phos daily for first 72h (increase frequency if falling or repletion needed).",
-    "Daily weights and I/O; reassess volume status frequently."
+function monitoringRecommendation({ setting, riskLevel }) {
+  const high = riskLevel === "very_high" || riskLevel === "high";
+  const lines = [
+    "Check K, Mg, and phosphate BEFORE initiating nutrition.",
+    high
+      ? "Monitor K/Mg/phosphate every 12 h for the first 3 days (more often if unstable or dropping)."
+      : "Monitor K/Mg/phosphate daily for the first 3 days; increase frequency if falling.",
+    "Vital signs every 4 h for the first 24 h after starting calories.",
+    "Daily weights with strict intake/output."
   ];
+  if (setting === "icu" || riskLevel === "very_high")
+    lines.push("Cardiorespiratory/telemetry monitoring for unstable patients or severe electrolyte derangement.");
+  return { ref: REFS.aspen2020, lines };
 }
 
-function thiamineRecommendation(patientType, highRisk) {
-  if (!highRisk) {
-    return "Consider thiamine supplementation in at-risk patients; follow local protocol.";
-  }
-  if (patientType === "peds") {
-    return "High risk: ensure thiamine supplementation per pediatric protocol (dose varies by age/weight).";
-  }
-  return "High risk: give thiamine before/with calories (commonly 100–300 mg/day) per local protocol; consider multivitamin.";
-}
-
-function electrolyteFramework(severity, imminent) {
-  // Purposefully non-prescriptive: prompts + consult triggers, avoids dosing tables.
+function electrolyteFramework({ rsSeverityWorst, imminent }) {
   const lines = [];
-
-  if (imminent) {
-    lines.push("Urgent: treat electrolyte abnormalities promptly; consider ICU/telemetry depending on context.");
-  }
-
-  lines.push("Replete phosphate/potassium/magnesium proactively if low or trending down; recheck after repletion.");
-  lines.push("If repeated/rapidly falling electrolytes, slow calorie advancement and reassess insulin/glucose load.");
-  lines.push("Consider nutrition support team + pharmacy involvement for aggressive repletion strategies.");
-
-  if (severity === "Severe") {
-    lines.push("Severe ASPEN-category electrolyte shift: strong consideration for higher-acuity monitoring and slower advancement.");
-  }
-
-  return lines;
+  if (imminent) lines.push("URGENT: treat the abnormal electrolyte promptly; consider higher-acuity monitoring.");
+  lines.push("Replete low phosphate/potassium/magnesium per local standards; recheck after repletion.");
+  lines.push("If electrolytes are difficult to correct or drop precipitously, decrease calories/dextrose by 50% and re-advance ~33% of goal every 1–2 days.");
+  if (rsSeverityWorst === "Severe")
+    lines.push("Severe electrolyte decrement: consider holding advancement and escalating monitoring.");
+  lines.push("Do not routinely check thiamine levels — supplement empirically.");
+  return { ref: REFS.aspen2020, lines };
 }
 
-function overallRiskLabel(niceHighRisk, aspenWorstSeverity, imminentFlagsArr) {
-  // Very high: imminent flags OR severe ASPEN shift
-  if (imminentFlagsArr.length > 0 || aspenWorstSeverity === "Severe") return "very_high";
-  if (niceHighRisk || aspenWorstSeverity === "Moderate") return "high";
-  if (aspenWorstSeverity === "Mild") return "moderate";
-  return "lower";
-}
-
-function labelToBadge(label) {
-  if (label === "very_high") return { text: "Very high risk", cls: "bad" };
-  if (label === "high") return { text: "High risk", cls: "warn" };
-  if (label === "moderate") return { text: "Moderate risk", cls: "warn" };
-  return { text: "Lower risk", cls: "ok" };
-}
-
-function buildPlan({ patientType, setting, weightKg, riskLabel, nice, aspenWorst, imminentFlagsArr }) {
-  const highRisk = (riskLabel === "very_high" || riskLabel === "high" || riskLabel === "moderate");
-
-  const feed = feedingStartRecommendation(patientType, riskLabel === "very_high" ? "very_high" : "high", weightKg);
-  const monitor = monitoringRecommendation(setting, (nice.majorFlags.length + nice.minorFlags.length) + imminentFlagsArr.length);
-  const thiamine = thiamineRecommendation(patientType, highRisk);
-  const electrolytes = electrolyteFramework(aspenWorst, imminentFlagsArr.length > 0);
-
-  // Add consult triggers
+function consultTriggers({ patientType, riskLevel }) {
   const consults = [];
-  if (riskLabel !== "lower") consults.push("Consider nutrition support / dietitian consult at initiation.");
-  if (riskLabel === "very_high") consults.push("Consider ICU/telemetry assessment depending on hemodynamics and electrolyte severity.");
-  consults.push("Consider pharmacy support for repletion strategy and drug interactions (e.g., diuretics/insulin).");
+  if (riskLevel !== "lower") consults.push("Nutrition support / dietitian at initiation.");
+  if (patientType === "peds") consults.push("Pediatric nutrition support team.");
+  if (riskLevel === "very_high") consults.push("ICU/telemetry assessment based on hemodynamics and electrolyte severity.");
+  consults.push("Pharmacy for repletion strategy and drug interactions (diuretics/insulin).");
+  return consults;
+}
 
-  return { feed, monitor, thiamine, electrolytes, consults };
+function buildPlan({ patientType, setting, weightKg, riskLevel, niceExtreme, rsSeverityWorst, imminent }) {
+  return {
+    feed: feedingStart({ patientType, riskLevel, weightKg, niceExtreme }),
+    thiamine: thiamineRecommendation(patientType, weightKg),
+    monitor: monitoringRecommendation({ setting, riskLevel }),
+    electrolytes: electrolyteFramework({ rsSeverityWorst, imminent }),
+    consults: consultTriggers({ patientType, riskLevel })
+  };
 }
