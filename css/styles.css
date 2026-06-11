@@ -1,42 +1,71 @@
-/* ── Design tokens ─────────────────────────────────────── */
+/* ── Design tokens ─────────────────────────────────────────
+   Light: warm paper neutrals, muted teal accent.
+   Dark: warm graphite (no blue cast), soft off-white text, gentle
+   desaturated status colors — easy on the eyes for long shifts.
+   Theme controlled by [data-theme] on <html>; falls back to OS pref. */
+
 :root {
-  --bg:        #f4f6f9;
+  /* Light (default) */
+  --bg:        #f6f5f2;
   --surface:   #ffffff;
-  --surface2:  #f0f2f6;
-  --text:      #111827;
-  --muted:     #6b7280;
-  --border:    #e5e7eb;
-  --accent:    #0f4c81;
-  --accent-lt: #e8f0f9;
-  --orange:    #ea580c;
-  --ok:        #16a34a;
-  --warn:      #d97706;
-  --bad:       #dc2626;
-  --ok-bg:     rgba(22,163,74,.10);
-  --warn-bg:   rgba(217,119,6,.10);
-  --bad-bg:    rgba(220,38,38,.10);
+  --surface2:  #efeeea;
+  --text:      #2b2d31;
+  --muted:     #6e7076;
+  --border:    #e2e1dc;
+  --accent:    #0e7066;
+  --accent-lt: #e4f0ee;
+  --accent-contrast: #ffffff;
+  --orange:    #c2702e;
+  --ok:        #2e7d4f;
+  --warn:      #a8762a;
+  --bad:       #b3534a;
+  --ok-bg:     rgba(46,125,79,.09);
+  --warn-bg:   rgba(168,118,42,.10);
+  --bad-bg:    rgba(179,83,74,.09);
   --radius:    10px;
-  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
-  --tab-h:     56px;
+  --shadow:    0 1px 3px rgba(40,38,33,.07), 0 1px 2px rgba(40,38,33,.04);
+}
+
+/* Dark token set (shared by explicit dark + OS-auto dark) */
+:root[data-theme="dark"] {
+  --bg:        #17181a;
+  --surface:   #1e1f21;
+  --surface2:  #27282a;
+  --text:      #d8d4cc;
+  --muted:     #93908a;
+  --border:    #333335;
+  --accent:    #7ab8af;
+  --accent-lt: rgba(122,184,175,.14);
+  --accent-contrast: #17181a;
+  --orange:    #c98a4b;
+  --ok:        #7cb98b;
+  --warn:      #cfa15c;
+  --bad:       #cf7b70;
+  --ok-bg:     rgba(124,185,139,.12);
+  --warn-bg:   rgba(207,161,92,.12);
+  --bad-bg:    rgba(207,123,112,.12);
+  --shadow:    0 1px 3px rgba(0,0,0,.3);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg:        #0b0e14;
-    --surface:   #131720;
-    --surface2:  #1a2030;
-    --text:      #e9eaf0;
-    --muted:     #9aa3b2;
-    --border:    #252d3d;
-    --accent:    #3b82f6;
-    --accent-lt: #1e2d45;
-    --ok:        #22c55e;
-    --warn:      #f59e0b;
-    --bad:       #ef4444;
-    --ok-bg:     rgba(34,197,94,.12);
-    --warn-bg:   rgba(245,158,11,.12);
-    --bad-bg:    rgba(239,68,68,.12);
-    --shadow:    0 1px 4px rgba(0,0,0,.4);
+  :root:not([data-theme="light"]) {
+    --bg:        #17181a;
+    --surface:   #1e1f21;
+    --surface2:  #27282a;
+    --text:      #d8d4cc;
+    --muted:     #93908a;
+    --border:    #333335;
+    --accent:    #7ab8af;
+    --accent-lt: rgba(122,184,175,.14);
+    --accent-contrast: #17181a;
+    --orange:    #c98a4b;
+    --ok:        #7cb98b;
+    --warn:      #cfa15c;
+    --bad:       #cf7b70;
+    --ok-bg:     rgba(124,185,139,.12);
+    --warn-bg:   rgba(207,161,92,.12);
+    --bad-bg:    rgba(207,123,112,.12);
+    --shadow:    0 1px 3px rgba(0,0,0,.3);
   }
 }
 
@@ -55,26 +84,24 @@ body {
 
 /* ── Top bar ────────────────────────────────────────────── */
 .topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--accent);
-  color: #fff;
+  background: var(--surface);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
   padding: .75rem 1.25rem;
   display: flex;
   align-items: center;
   gap: 1rem;
   justify-content: space-between;
-  box-shadow: 0 2px 6px rgba(0,0,0,.2);
 }
 .topbar h1 {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -.01em;
+  color: var(--accent);
 }
 .topbar-sub {
-  font-size: .8rem;
-  opacity: .75;
+  font-size: .78rem;
+  color: var(--muted);
   margin-top: 1px;
 }
 .topbar-actions { display: flex; gap: .4rem; flex-shrink: 0; }
@@ -253,17 +280,17 @@ input:focus, select:focus {
 
 .btn.primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--accent-contrast);
   border-color: var(--accent);
 }
 .btn.primary:hover { filter: brightness(1.1); }
 
 .btn.ghost {
-  background: rgba(255,255,255,.12);
-  color: #fff;
-  border-color: rgba(255,255,255,.25);
+  background: transparent;
+  color: var(--text);
+  border-color: var(--border);
 }
-.btn.ghost:hover { background: rgba(255,255,255,.2); }
+.btn.ghost:hover { background: var(--surface2); }
 
 .btn.outline {
   background: transparent;

@@ -430,6 +430,23 @@ function loadFromHash() {
 // ── Wire up ────────────────────────────────────────────────
 document.querySelector('[data-calc="adult"]').addEventListener("click", runAdult);
 document.querySelector('[data-calc="peds"]').addEventListener("click", runPeds);
+// Theme: cycle light → dark → auto (auto = follow OS preference).
+const THEME_KEY = "rhefeed_theme";
+function applyTheme(mode) {
+  if (mode === "light" || mode === "dark") document.documentElement.dataset.theme = mode;
+  else delete document.documentElement.dataset.theme;
+  const btn = $("btnTheme");
+  btn.textContent = mode === "light" ? "\u2600" : mode === "dark" ? "\u263E" : "\u25D0";
+  btn.title = `Theme: ${mode || "auto"}`;
+}
+$("btnTheme").addEventListener("click", () => {
+  const cur = localStorage.getItem(THEME_KEY);
+  const next = cur === "light" ? "dark" : cur === "dark" ? null : "light";
+  if (next) localStorage.setItem(THEME_KEY, next); else localStorage.removeItem(THEME_KEY);
+  applyTheme(next);
+});
+applyTheme(localStorage.getItem(THEME_KEY));
+
 $("btnShare").addEventListener("click", shareLink);
 $("btnPrint").addEventListener("click", () => window.print());
 $("btnNew").addEventListener("click", () => { clearState(); location.hash = ""; location.reload(); });

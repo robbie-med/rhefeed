@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Refeeding &amp; Malnutrition — One-Stop</title>
   <meta name="description" content="Evidence-based refeeding syndrome risk, pediatric malnutrition grading, caloric needs, and copy-to-chart assessment & plan. Educational use only." />
-  <meta name="theme-color" content="#0f4c81" />
+  <meta name="theme-color" content="#f6f5f2" />
+  <script>
+    try { var t = localStorage.getItem("rhefeed_theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="RheF" />
@@ -22,6 +25,7 @@
     <div class="topbar-sub">Evidence-based · offline-capable · not a substitute for clinical judgment</div>
   </div>
   <div class="topbar-actions">
+    <button id="btnTheme" class="btn ghost" title="Theme: auto" aria-label="Toggle theme">◐</button>
     <button id="btnShare" class="btn ghost">Share</button>
     <button id="btnNew"   class="btn ghost">New</button>
     <button id="btnPrint" class="btn ghost">Print</button>
