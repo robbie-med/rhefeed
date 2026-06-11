@@ -362,29 +362,82 @@ const FIELD_IDS = [
 ];
 const CHECK_IDS = ["a_rfAlcohol","a_rfDiuretics","a_rfInsulin","a_rfChemo","a_rfAntacids","a_rfStarvation","a_fatLossMod","a_fatLossSevere","a_muscleLossMild","a_muscleLossSevere","a_comorbidityMod","a_comorbiditySevere"];
 
-function saveAll() {
+function activePane() {
+  const tab = document.querySelector(".pane-tab.active");
+  return tab ? tab.dataset.pane : "adult";
+}
+function collectState() {
   const s = {};
   FIELD_IDS.forEach(id => { const n = $(id); if (n) s[id] = n.value; });
   CHECK_IDS.forEach(id => { const n = $(id); if (n) s[id] = n.checked; });
-  saveState(s);
+  s._pane = activePane();
+  return s;
 }
-function restoreAll() {
-  const s = loadState(); if (!s) return;
+function applyState(s) {
+  if (!s) return;
   Object.keys(s).forEach(k => {
+    if (k === "_pane") return;
     const n = $(k); if (!n) return;
     if (n.type === "checkbox") n.checked = !!s[k]; else n.value = s[k];
   });
+}
+function saveAll() { saveState(collectState()); }
+function restoreAll() { applyState(loadState()); }
+
+// ── Shareable URL (state encoded in the hash; static-host friendly) ────────
+function encodeState(s) {
+  // Drop empty values to keep the link short.
+  const compact = {};
+  Object.keys(s).forEach(k => {
+    const v = s[k];
+    if (v === "" || v === false || v == null) return;
+    compact[k] = v;
+  });
+  return btoa(unescape(encodeURIComponent(JSON.stringify(compact))))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function decodeState(str) {
+  try {
+    const b64 = str.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(decodeURIComponent(escape(atob(b64))));
+  } catch (_) { return null; }
+}
+function buildShareURL() {
+  return `${location.origin}${location.pathname}#d=${encodeState(collectState())}`;
+}
+function shareLink() {
+  const url = buildShareURL();
+  history.replaceState(null, "", url);
+  navigator.clipboard.writeText(url)
+    .then(() => showToast("Share link copied"))
+    .catch(() => showToast("Copy failed — link is in the address bar"));
+}
+function loadFromHash() {
+  const m = location.hash.match(/[#&]d=([^&]+)/);
+  if (!m) return false;
+  const state = decodeState(m[1]);
+  if (!state) return false;
+  applyState(state);
+  const pane = state._pane === "peds" ? "peds" : (state._pane === "about" ? "about" : "adult");
+  const tab = document.querySelector(`.pane-tab[data-pane="${pane}"]`);
+  if (tab) tab.click();
+  // Auto-recalculate so the colleague immediately sees the same result.
+  if (pane === "peds") runPeds();
+  else if (pane === "adult") runAdult();
+  return true;
 }
 
 // ── Wire up ────────────────────────────────────────────────
 document.querySelector('[data-calc="adult"]').addEventListener("click", runAdult);
 document.querySelector('[data-calc="peds"]').addEventListener("click", runPeds);
+$("btnShare").addEventListener("click", shareLink);
 $("btnPrint").addEventListener("click", () => window.print());
-$("btnNew").addEventListener("click", () => { clearState(); location.reload(); });
+$("btnNew").addEventListener("click", () => { clearState(); location.hash = ""; location.reload(); });
 document.addEventListener("input", saveAll);
 
-restoreAll();
 renderAboutRefs();
+// A shared link (URL hash) takes priority over the locally saved draft.
+if (!loadFromHash()) restoreAll();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
