@@ -441,6 +441,13 @@ function renderFeedingAmount(result) {
 
 // ── Build a one-line feeding plan string for the EMR note ─────────────────
 function feedingPlanString(food, targetKcalPerDay, frequency) {
+  if (!food) return null;
+  if (!isFinite(targetKcalPerDay) || targetKcalPerDay <= 0) {
+    // No kcal target available — show food name + frequency only
+    var freqLabels = {3: "TID", 4: "QID", 6: "q4h", 8: "q3h", 12: "q2h"};
+    var fl = freqLabels[frequency || 3] || ("q" + Math.round(24/(frequency||3)) + "h");
+    return food.name + " (" + fl + ") — kcal target needed for amounts";
+  }
   var r = calcFeedingAmount(food, targetKcalPerDay, frequency);
   if (!r) return null;
   var s = r.foodName + ", " + r.ozPerFeedRounded + " oz (" + r.mLPerFeed + " mL) " + r.frequencyLabel;

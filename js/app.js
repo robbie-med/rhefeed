@@ -380,11 +380,20 @@ function runPeds() {
     energy: energy ? { bmr: energy.bmr, needs: energy.needs, factor: energy.factor, intakeKcal: energy.intakeKcal, balance: energy.balance, starvation: energy.starvation } : null,
     plan,
     catchUp: catchUpData,
-    foodPlan: $("p_foodSearch").dataset.selected ? (function() {
-      var food = babyFoodByName($("p_foodSearch").dataset.selected);
+    foodPlan: (function() {
+      var selectedName = $("p_foodSearch").dataset.selected;
+      if (!selectedName) return null;
+      var food = babyFoodByName(selectedName);
+      if (!food) return null;
       var freq = parseInt($("p_foodFreq").value) || 3;
-      return food && isFinite(weightKg) ? feedingPlanString(food, catchUpData ? catchUpData.catchUpKcalPerDay : null, freq) : null;
-    })() : null,
+      // Try catchUpData first, then the catch-up badge, then null
+      var targetKcal = (catchUpData && catchUpData.catchUpKcalPerDay) || null;
+      if (!isFinite(targetKcal)) {
+        var badge = $("p_catchUpKcal");
+        targetKcal = badge ? parseInt(badge.dataset.kcal) : NaN;
+      }
+      return feedingPlanString(food, targetKcal, freq);
+    })(),
     refeeding: null
   });
 
@@ -431,6 +440,11 @@ function applyState(s) {
     const n = $(k); if (!n) return;
     if (n.type === "checkbox") n.checked = !!s[k]; else n.value = s[k];
   });
+  // Restore food search dataset.selected from restored value
+  var foodInput = $("p_foodSearch");
+  if (foodInput && foodInput.value) {
+    foodInput.dataset.selected = foodInput.value;
+  }
 }
 function saveAll() { saveState(collectState()); }
 function restoreAll() { applyState(loadState()); }
