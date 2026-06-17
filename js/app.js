@@ -725,6 +725,93 @@ $("btnTheme").addEventListener("click", () => {
 });
 applyTheme(localStorage.getItem(THEME_KEY));
 
+// ── Settings page wiring ───────────────────────────────────
+function populateSettingsForm() {
+  if (!SETTINGS) SETTINGS = settingsDefaults();
+  var s = SETTINGS;
+  $("s_pedsStartLow").value = s.feeding.pedsStartPctLow;
+  $("s_pedsStartHigh").value = s.feeding.pedsStartPctHigh;
+  $("s_girLow").value = s.feeding.girStartLow;
+  $("s_girHigh").value = s.feeding.girStartHigh;
+  $("s_girAdv").value = s.feeding.girAdvance;
+  $("s_girMax").value = s.feeding.girMax;
+  $("s_adultKcalLow").value = s.feeding.adultStartKcalLow;
+  $("s_adultKcalHigh").value = s.feeding.adultStartKcalHigh;
+  $("s_adultAdvPct").value = s.feeding.adultAdvancePct;
+  $("s_adultAdvMin").value = s.feeding.adultAdvanceDaysMin;
+  $("s_adultAdvMax").value = s.feeding.adultAdvanceDaysMax;
+  $("s_thiaPeds").value = s.thiamine.pedsMgPerKg;
+  $("s_thiaPedsMax").value = s.thiamine.pedsMaxMg;
+  $("s_thiaAdult").value = s.thiamine.adultMg;
+  $("s_thiaDays").value = s.thiamine.durationDays;
+  $("s_foodFreq").value = s.defaults.foodFrequency;
+  $("s_prefFormulas").value = (s.defaults.preferredFormulas || []).join("\n");
+}
+
+function readSettingsForm() {
+  var prefs = $("s_prefFormulas").value.split("\n").map(function(l) { return l.trim(); }).filter(Boolean);
+  SETTINGS = {
+    feeding: {
+      pedsStartPctLow: parseInt($("s_pedsStartLow").value) || FEEDING.peds.startPctGoalLow,
+      pedsStartPctHigh: parseInt($("s_pedsStartHigh").value) || FEEDING.peds.startPctGoalHigh,
+      girStartLow: parseInt($("s_girLow").value) || FEEDING.peds.girStartLow,
+      girStartHigh: parseInt($("s_girHigh").value) || FEEDING.peds.girStartHigh,
+      girAdvance: parseInt($("s_girAdv").value) || FEEDING.peds.girAdvance,
+      girMax: parseInt($("s_girMax").value) || FEEDING.peds.girMax,
+      adultStartKcalLow: parseInt($("s_adultKcalLow").value) || FEEDING.adult.startKcalPerKgLow,
+      adultStartKcalHigh: parseInt($("s_adultKcalHigh").value) || FEEDING.adult.startKcalPerKgHigh,
+      adultAdvancePct: parseInt($("s_adultAdvPct").value) || FEEDING.adult.advancePctGoal,
+      adultAdvanceDaysMin: parseInt($("s_adultAdvMin").value) || FEEDING.adult.advanceDaysMin,
+      adultAdvanceDaysMax: parseInt($("s_adultAdvMax").value) || FEEDING.adult.advanceDaysMax
+    },
+    thiamine: {
+      pedsMgPerKg: parseFloat($("s_thiaPeds").value) || THIAMINE.pedsMgPerKg,
+      pedsMaxMg: parseInt($("s_thiaPedsMax").value) || THIAMINE.pedsMaxMg,
+      adultMg: parseInt($("s_thiaAdult").value) || THIAMINE.adultMg,
+      durationDays: $("s_thiaDays").value || THIAMINE.durationDays
+    },
+    defaults: {
+      foodFrequency: parseInt($("s_foodFreq").value) || 3,
+      preferredFormulas: prefs
+    }
+  };
+}
+
+$("btnSettingsSave").addEventListener("click", function() {
+  readSettingsForm();
+  settingsSave();
+  settingsApply();
+  $("s_status").textContent = "Saved.";
+  $("s_status").style.color = "var(--ok)";
+});
+
+$("btnSettingsReset").addEventListener("click", function() {
+  settingsReset();
+  populateSettingsForm();
+  $("s_status").textContent = "Reset to defaults.";
+  $("s_status").style.color = "var(--ok)";
+});
+
+$("btnSettingsExport").addEventListener("click", function() {
+  readSettingsForm();
+  settingsExport();
+  $("s_status").textContent = "Exported.";
+  $("s_status").style.color = "var(--ok)";
+});
+
+$("s_importFile").addEventListener("change", function() {
+  if (this.files && this.files[0]) {
+    settingsImport(this.files[0], function(ok, msg) {
+      $("s_status").textContent = msg;
+      $("s_status").style.color = ok ? "var(--ok)" : "var(--bad)";
+      if (ok) populateSettingsForm();
+    });
+  }
+});
+
+// Load settings on init
+settingsLoad();
+
 $("btnShare").addEventListener("click", shareLink);
 $("btnPrint").addEventListener("click", () => window.print());
 $("btnNew").addEventListener("click", () => { clearState(); location.hash = ""; location.reload(); });

@@ -354,7 +354,21 @@ const BABY_FOODS = [
 
 // ── Search foods by name fragment (case-insensitive), also matches tags ───
 function searchBabyFoods(query) {
-  if (!query || query.trim() === "") return BABY_FOODS.slice(0, 60);
+  if (!query || query.trim() === "") {
+    // Show preferred formulas pinned at top
+    var prefs = settingsPreferredFormulas();
+    var pinned = [];
+    if (prefs.length) {
+      prefs.forEach(function(name) {
+        var f = babyFoodByName(name);
+        if (f) pinned.push(f);
+      });
+    }
+    var rest = BABY_FOODS.filter(function(f) {
+      return pinned.indexOf(f) === -1;
+    }).slice(0, 60 - pinned.length);
+    return pinned.concat(rest);
+  }
   var q = query.toLowerCase();
   return BABY_FOODS.filter(function(f) {
     return f.name.toLowerCase().indexOf(q) !== -1 ||
