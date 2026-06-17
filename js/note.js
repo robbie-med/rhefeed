@@ -16,19 +16,15 @@ function severityWord(level) {
 // Shared management / plan block.
 function planBlock(plan) {
   const L = [];
-  L.push("PLAN (framework — individualize to local protocol):");
+  L.push("PLAN:");
   if (plan.feed) {
-    L.push(`  Nutrition — ${plan.feed.headline}:`);
-    plan.feed.lines.forEach(x => L.push(`    - ${x}`));
+    L.push("- " + plan.feed.headline);
+    plan.feed.lines.forEach(x => L.push("- " + x));
   }
-  L.push(`  Thiamine/vitamins:`);
-  L.push(`    - ${plan.thiamine.text}`);
-  L.push(`  Monitoring:`);
-  plan.monitor.lines.forEach(x => L.push(`    - ${x}`));
-  L.push(`  Electrolytes:`);
-  plan.electrolytes.lines.forEach(x => L.push(`    - ${x}`));
-  L.push(`  Consults:`);
-  plan.consults.forEach(x => L.push(`    - ${x}`));
+  L.push("- Thiamine: " + plan.thiamine.text);
+  plan.monitor.lines.forEach(x => L.push("- " + x));
+  plan.electrolytes.lines.forEach(x => L.push("- " + x));
+  L.push("- Consults: " + plan.consults.join("; "));
   return L;
 }
 
@@ -91,45 +87,82 @@ function buildAdultNote(d) {
 
 // ── Pediatric note (malnutrition + refeeding) ──────────────────────────────
 function buildPedsNote(d) {
-  const L = [];
-  L.push("PEDIATRIC NUTRITION ASSESSMENT");
+  var L = [];
+  L.push("PEDIATRIC NUTRITION ASSESSMENT & PLAN");
   L.push(ruleLine());
-  L.push(`Age: ${fmt(d.ageYears, 1)} yr | Sex: ${d.sex}`);
-  L.push(`Wt: ${fmt(d.weightKg)} kg` + (isFinite(d.heightCm) ? ` | Ht/Len: ${fmt(d.heightCm)} cm` : "") +
-         (isFinite(d.bmi) ? ` | BMI: ${fmt(d.bmi)}` : ""));
-  if (isFinite(d.wtLossPct)) L.push(`Weight change: ${pct(d.wtLossPct)} from usual body weight`);
-  L.push("");
+
+  // ═══════════ ASSESSMENT ═══════════
+  L.push("ASSESSMENT:");
+  L.push("- Age: " + fmt(d.ageYears, 1) + " yr | Sex: " + d.sex);
+  L.push("- Wt: " + fmt(d.weightKg, 2) + " kg" +
+    (isFinite(d.heightCm) ? " | Ht/Len: " + fmt(d.heightCm, 1) + " cm" : "") +
+    (isFinite(d.bmi) ? " | BMI: " + fmt(d.bmi, 1) : ""));
+  if (isFinite(d.wtLossPct))
+    L.push("- Weight change: " + pct(d.wtLossPct) + " loss from usual body weight");
 
   // Malnutrition (AND/ASPEN)
   if (d.maln && d.maln.overall) {
-    L.push(`MALNUTRITION (AND/ASPEN, ${d.maln.context}):`);
-    d.maln.indicators.forEach(ind =>
-      L.push(`  - ${ind.name}: ${ind.grade}${isFinite(ind.value) ? ` (${ind.value})` : ""}`));
-    L.push(`  Diagnostic impression: meets criteria for ${d.maln.overall.toUpperCase()} pediatric malnutrition.`);
-    L.push("");
+    L.push("- Malnutrition (AND/ASPEN 2014): " + d.maln.overall.toUpperCase() + " (" + d.maln.context + ")");
+    d.maln.indicators.forEach(function(ind) {
+      L.push("  " + ind.name + ": " + ind.grade + (isFinite(ind.value) ? " (" + ind.value + ")" : ""));
+    });
+  } else {
+    L.push("- Malnutrition: insufficient data to grade");
   }
 
-  // Refeeding risk (ASPEN peds)
-  L.push(`REFEEDING RISK (ASPEN 2020 pediatric): ${severityWord(d.pedsRisk.level).toUpperCase()} risk`);
+  // Refeeding risk
+  L.push("- Refeeding risk (ASPEN 2020 peds): " + severityWord(d.pedsRisk.level).toUpperCase());
   if (d.pedsRisk.categories.length)
-    d.pedsRisk.categories.forEach(c => L.push(`  - ${c.name} [${c.tier}]`));
-  L.push(`Electrolyte-shift severity (ASPEN): ${d.rsSeverityWorst}`);
+    d.pedsRisk.categories.forEach(function(c) { L.push("  " + c.name + " [" + c.tier + "]"); });
+  L.push("- Electrolyte-shift severity: " + d.rsSeverityWorst);
+
+  // Labs
   if (d.phosBase && d.phosNow)
-    L.push(`  Phosphate: ${fmt(d.phosBase, 2)} -> ${fmt(d.phosNow, 2)} mmol/L (${d.phosDropLabel})`);
-  if (d.imminentFlags.length) L.push(`** IMMINENT FLAGS: ${d.imminentFlags.join("; ")} **`);
-  L.push("");
-  L.push(`OVERALL: ${d.overallBadge.text}`);
-  L.push("");
-  energyBlock(d.energy).forEach(x => L.push(x));
-  L.push("");
-  if (d.refeeding) {
-    L.push("REFEEDING / CATCH-UP:");
-    d.refeeding.forEach(function(x) { L.push("  " + x); });
-    L.push("");
+    L.push("- Phosphate: " + fmt(d.phosBase, 2) + " → " + fmt(d.phosNow, 2) + " mmol/L (" + d.phosDropLabel + ")");
+  if (d.imminentFlags.length)
+    L.push("- IMMINENT: " + d.imminentFlags.join("; "));
+
+  L.push("- OVERALL: " + d.overallBadge.text);
+
+  // Energy assessment
+  if (d.energy && d.energy.bmr) {
+    L.push("- BMR (" + d.energy.bmr.method + "): " + Math.round(d.energy.bmr.value) + " kcal/day");
+    if (d.energy.needs)
+      L.push("- Est. total needs (x" + d.energy.factor + "): " + Math.round(d.energy.needs.value) + " kcal/day");
+    if (d.energy.balance) {
+      L.push("- Current intake: " + Math.round(d.energy.intakeKcal) + " kcal/day = " +
+        d.energy.balance.pctMet.toFixed(0) + "% of needs (" + d.energy.balance.adequacy.grade + ")");
+      L.push("- Daily deficit: " + Math.round(d.energy.balance.dailyDeficit) + " kcal/day");
+      if (isFinite(d.energy.balance.cumulative))
+        L.push("- Cumulative deficit: ~" + Math.round(d.energy.balance.cumulative).toLocaleString() + " kcal");
+    }
+    if (d.energy.starvation && d.energy.starvation.drivers.length)
+      L.push("- Degree of undernutrition: " + d.energy.starvation.label + " (" + d.energy.starvation.drivers.join("; ") + ")");
   }
-  planBlock(d.plan).forEach(x => L.push(x));
+
+  // Catch-up calculation (show the math, not "see calculator")
+  if (d.catchUp) {
+    L.push("- Catch-up target: " + d.catchUp.catchUpKcalPerDay + " kcal/day (" +
+      d.catchUp.catchUpKcalPerKg.toFixed(0) + " kcal/kg/day)");
+    L.push("  Formula: RDA " + d.catchUp.rdaKcalPerKg + " kcal/kg (" + d.catchUp.rdaAgeRange + ") × IBW " +
+      d.catchUp.ibwKg.toFixed(1) + " kg ÷ actual " + d.catchUp.actualWeightKg.toFixed(1) + " kg = " +
+      d.catchUp.catchUpKcalPerKg.toFixed(0) + " kcal/kg/day");
+    L.push("  Estimated protein: ~" + d.catchUp.catchUpProteinGPerKg.toFixed(1) + " g/kg/day");
+  }
+
   L.push("");
-  L.push("Refs: ASPEN 2020 (doi:10.1002/ncp.10474); AND/ASPEN peds malnutrition (Becker 2014); Schofield 1985.");
-  L.push("Educational decision support only — individualize to local protocol.");
+
+  // ═══════════ PLAN ═══════════
+  planBlock(d.plan).forEach(function(x) { L.push(x); });
+  L.push("");
+
+  // ═══════════ EDUCATION (delete before signing if desired) ═══════════
+  L.push("EDUCATION:");
+  L.push("- ASPEN 2020 refeeding risk: Significant = any 1 category; Moderate = any 2; Mild = any 3.");
+  L.push("- AND/ASPEN 2014 malnutrition: graded by single most severe indicator (z-score, wt loss, velocity, intake).");
+  L.push("- Catch-up formula: RDA kcal/kg × IBW (50th %ile wt for length) ÷ actual wt. Clinical estimation, not RCT-validated.");
+  L.push("- Refs: ASPEN 2020 (doi:10.1002/ncp.10474); Becker 2014; Schofield 1985.");
+  L.push("- Educational decision support only. Individualize route, rate, fluids, repletion to patient.");
+
   return L.join("\n");
 }

@@ -18,6 +18,17 @@ function dropLabel(pct) {
   return `${sign}${Math.abs(pct).toFixed(1)}%`;
 }
 
+// Compute age in years from date-of-birth and optional measurement date (defaults today)
+function calcAgeFromDOB(dobStr, measDateStr) {
+  if (!dobStr) return NaN;
+  var dob = new Date(dobStr + "T00:00:00");
+  var meas = measDateStr ? new Date(measDateStr + "T00:00:00") : new Date();
+  if (isNaN(dob.getTime())) return NaN;
+  var ageMs = meas - dob;
+  if (ageMs < 0) return NaN;
+  return ageMs / (365.2425 * 24 * 3600 * 1000);
+}
+
 // ── Pane navigation ────────────────────────────────────────
 $$(".pane-tab").forEach(tab => {
   tab.addEventListener("click", () => {
@@ -262,7 +273,7 @@ function runAdult() {
 function runPeds() {
   const status = document.querySelector('[data-status="peds"]');
   const sex = $("p_sex").value;
-  const ageYears = ageToYears(num("p_age"), $("p_ageUnit").value);
+  const ageYears = calcAgeFromDOB($("p_dob").value, $("p_measDate").value);
   const weightKg = weightToKg(num("p_weight"), $("p_weightUnit").value);
   const heightCm = $("p_height").value ? heightToCm(num("p_height"), $("p_heightUnit").value) : NaN;
   const usualKg  = $("p_usualWeight").value ? weightToKg(num("p_usualWeight"), $("p_usualWeightUnit").value) : NaN;
@@ -354,6 +365,13 @@ function runPeds() {
     ${maln.overall ? `<span class="badge ${malnutritionBadgeClass(maln.overall)}">Malnutrition: ${escapeHtml(maln.overall)}</span>` : ""}
     <span class="badge ${badge.cls}">RS: ${escapeHtml(pedsRisk.level)}</span>`;
 
+  // Compute catch-up if IBW is available from z-score calculator
+  var catchUpData = null;
+  var ibwFromDom = parseFloat($("p_whz").dataset.ibw);
+  if (isFinite(ibwFromDom) && isFinite(ageYears) && isFinite(weightKg)) {
+    catchUpData = catchUpCaloriesPeds(ageYears, weightKg, ibwFromDom);
+  }
+
   const noteText = buildPedsNote({
     ageYears, sex, weightKg, heightCm, bmi, wtLossPct,
     maln, pedsRisk, rsSeverityWorst, imminentFlags: imminent, overallBadge: badge,
@@ -361,9 +379,8 @@ function runPeds() {
     phosDropLabel: dropLabel(phosDropPct),
     energy: energy ? { bmr: energy.bmr, needs: energy.needs, factor: energy.factor, intakeKcal: energy.intakeKcal, balance: energy.balance, starvation: energy.starvation } : null,
     plan,
-    refeeding: isFinite(weightKg) ? [
-      "See pediatric catch-up calculator in form for RDA × IBW ÷ actual weight target"
-    ] : null
+    catchUp: catchUpData,
+    refeeding: null
   });
 
   renderResults(document.querySelector('[data-results="peds"]'), { heroBadge: badge, heroSub, sections, plan, noteText });
@@ -384,7 +401,7 @@ function renderAboutRefs() {
 const FIELD_IDS = [
   "a_setting","a_sex","a_age","a_weight","a_weightUnit","a_height","a_heightUnit","a_usualWeight","a_usualWeightUnit",
   "a_daysNoIntake","a_intakeKcal","a_factor","a_phosBase","a_phosUnit","a_phosNow","a_phosUnitNow","a_kBase","a_mgBase","a_kNow","a_mgNow",
-  "p_setting","p_sex","p_age","p_ageUnit","p_weight","p_weightUnit","p_height","p_heightUnit","p_usualWeight","p_usualWeightUnit",
+  "p_setting","p_sex","p_dob","p_measDate","p_weight","p_weightUnit","p_height","p_heightUnit","p_usualWeight","p_usualWeightUnit",
   "p_daysLowIntake","p_intakeKcal","p_factor","p_whz","p_bmiZ","p_muacZ","p_lhaZ","p_zDecline","p_velocityPct",
   "p_phosBase","p_phosUnit","p_phosNow","p_phosUnitNow","p_lytes","p_kBase","p_kNow","p_comorbidity",
   "p_zStandard","a_targetWeight","a_targetWeightUnit","a_targetDays"
@@ -475,7 +492,7 @@ $("btnCalcZScores").addEventListener("click", function() {
   var status = $("p_zStatus");
   var standard = $("p_zStandard").value;
   var sex = $("p_sex").value;
-  var ageYears = ageToYears(num("p_age"), $("p_ageUnit").value);
+  var ageYears = calcAgeFromDOB($("p_dob").value, $("p_measDate").value);
   var weightKg = weightToKg(num("p_weight"), $("p_weightUnit").value);
   var heightCm = $("p_height").value ? heightToCm(num("p_height"), $("p_heightUnit").value) : NaN;
   var ageMonths = ageYears * 12;
@@ -590,7 +607,7 @@ function updateCatchUpDisplay() {
   var div = $("p_catchUpResult");
   if (!div) return;
   var weightKg = weightToKg(num("p_weight"), $("p_weightUnit").value);
-  var ageYears = ageToYears(num("p_age"), $("p_ageUnit").value);
+  var ageYears = calcAgeFromDOB($("p_dob").value, $("p_measDate").value);
   var ibw = parseFloat($("p_whz").dataset.ibw);
   if (!isFinite(ibw) || !isFinite(weightKg) || !isFinite(ageYears)) {
     div.innerHTML = '<span class="disclaimer">Calculate Z-scores first to see catch-up calorie targets.</span>';

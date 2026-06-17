@@ -11,14 +11,18 @@ function feedingStart({ patientType, riskLevel, weightKg, niceExtreme }) {
 
   if (patientType === "peds") {
     const p = F.peds;
+    // Calculate actual kcal amounts from weight for context
+    const estGoalLow = Math.round(weightKg * 80 * p.startPctGoalLow / 100);
+    const estGoalHigh = Math.round(weightKg * 80 * p.startPctGoalHigh / 100);
     return {
       ref: REFS.aspen2020,
       headline: "Pediatric initiation (ASPEN 2020)",
       lines: [
-        `Initiate nutrition at a maximum of ${p.startPctGoalLow}–${p.startPctGoalHigh}% of goal.`,
-        `If using IV dextrose: start GIR ~${p.girStartLow}–${p.girStartHigh} mg/kg/min, advance ${F.peds.girAdvance} mg/kg/min daily as glucose tolerates, up to ${14}–${p.girMax} mg/kg/min.`,
-        `Advance by ~${F.adult.advancePctGoal}% of goal every 1–2 days; halve if electrolytes drop precipitously.`,
-        `Coordinate with pediatric nutrition support / pharmacy.`
+        "Start PO/NG nutrition at " + p.startPctGoalLow + "–" + p.startPctGoalHigh + "% of estimated goal (~" + estGoalLow + "–" + estGoalHigh + " kcal/day).",
+        "Route: PO > NG > IV. Use age-appropriate standard formula or breast milk.",
+        "If IV dextrose: start GIR " + p.girStartLow + "–" + p.girStartHigh + " mg/kg/min, advance " + F.peds.girAdvance + " mg/kg/min daily to max 14–" + p.girMax + " mg/kg/min.",
+        "Advance by ~33% of goal every 1–2 days as tolerated. Halve rate if electrolytes drop >20%.",
+        "Coordinate with pediatric nutrition support / pharmacy."
       ]
     };
   }
@@ -43,8 +47,8 @@ function thiamineRecommendation(patientType, weightKg) {
     return {
       ref: REFS.aspen2020,
       text: `Thiamine ${THIAMINE.pedsMgPerKg} mg/kg` +
-            (dose ? ` (≈ ${Math.round(dose)} mg)` : "") +
-            ` to a max of ${THIAMINE.pedsMaxMg} mg/day BEFORE feeding or dextrose-containing IV fluids; continue ${THIAMINE.durationDays} if severe starvation/high risk. Add a complete multivitamin daily.`
+            (dose ? ` = ${Math.round(dose)} mg` : "") +
+            ` (max ${THIAMINE.pedsMaxMg} mg) PO/IV once BEFORE feeding. Then ${THIAMINE.pedsMgPerKg} mg/kg PO/IV daily × ${THIAMINE.durationDays}. Add pediatric multivitamin 1 mL PO daily.`
     };
   }
   return {
