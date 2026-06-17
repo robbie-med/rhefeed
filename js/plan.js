@@ -75,7 +75,7 @@ function monitoringRecommendation({ setting, riskLevel }) {
 function electrolyteFramework({ rsSeverityWorst, imminent }) {
   const lines = [];
   if (imminent) lines.push("URGENT: treat the abnormal electrolyte promptly; consider higher-acuity monitoring.");
-  lines.push("Replete low phosphate/potassium/magnesium per local standards; recheck after repletion.");
+  lines.push("Replenish low phosphate/potassium/magnesium per local standards; recheck after replenishment.");
   lines.push("If electrolytes are difficult to correct or drop precipitously, decrease calories/dextrose by 50% and re-advance ~33% of goal every 1–2 days.");
   if (rsSeverityWorst === "Severe")
     lines.push("Severe electrolyte decrement: consider holding advancement and escalating monitoring.");
