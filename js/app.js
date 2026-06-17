@@ -111,13 +111,13 @@ function renderEnergy(energy) {
 }
 
 function renderPlan(plan) {
-  let html = `<h3>Nutrition — ${escapeHtml(plan.feed.headline)}</h3><ul>`;
+  let html = `<h3>Plan</h3><ul>`;
   html += plan.feed.lines.map(x => `<li>${escapeHtml(x)}</li>`).join("");
+  html += `<li>${escapeHtml(plan.thiamine.text)}</li>`;
+  html += plan.monitor.lines.map(x => `<li>${escapeHtml(x)}</li>`).join("");
+  html += plan.electrolytes.lines.map(x => `<li>${escapeHtml(x)}</li>`).join("");
+  html += `<li>Consults: ${escapeHtml(plan.consults.join(", "))}</li>`;
   html += `</ul><div class="work-ref">Source: ${refLink(plan.feed.ref)}</div>`;
-  html += `<h3>Thiamine / vitamins</h3><ul><li>${escapeHtml(plan.thiamine.text)}</li></ul>`;
-  html += `<h3>Monitoring</h3><ul>${plan.monitor.lines.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
-  html += `<h3>Electrolytes (framework)</h3><ul>${plan.electrolytes.lines.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
-  html += `<h3>Consult triggers</h3><ul>${plan.consults.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>`;
   return html;
 }
 

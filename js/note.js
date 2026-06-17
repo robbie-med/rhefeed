@@ -18,13 +18,12 @@ function planBlock(plan) {
   const L = [];
   L.push("PLAN:");
   if (plan.feed) {
-    L.push("- " + plan.feed.headline);
     plan.feed.lines.forEach(x => L.push("- " + x));
   }
-  L.push("- Thiamine: " + plan.thiamine.text);
+  L.push("- " + plan.thiamine.text);
   plan.monitor.lines.forEach(x => L.push("- " + x));
   plan.electrolytes.lines.forEach(x => L.push("- " + x));
-  L.push("- Consults: " + plan.consults.join("; "));
+  L.push("- Consults: " + plan.consults.join(", "));
   return L;
 }
 
