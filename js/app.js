@@ -380,6 +380,7 @@ function runPeds() {
     energy: energy ? { bmr: energy.bmr, needs: energy.needs, factor: energy.factor, intakeKcal: energy.intakeKcal, balance: energy.balance, starvation: energy.starvation } : null,
     plan,
     catchUp: catchUpData,
+    foodPlan: $("p_foodSearch").dataset.selected ? ($("p_foodSearch").dataset.selected + " — see Baby food calculator for per-feed amounts") : null,
     refeeding: null
   });
 
@@ -404,7 +405,7 @@ const FIELD_IDS = [
   "p_setting","p_sex","p_dob","p_measDate","p_weight","p_weightUnit","p_height","p_heightUnit","p_usualWeight","p_usualWeightUnit",
   "p_daysLowIntake","p_intakeKcal","p_factor","p_whz","p_bmiZ","p_muacZ","p_lhaZ","p_zDecline","p_velocityPct",
   "p_phosBase","p_phosUnit","p_phosNow","p_phosUnitNow","p_lytes","p_kBase","p_kNow","p_comorbidity",
-  "p_zStandard","a_targetWeight","a_targetWeightUnit","a_targetDays"
+  "p_zStandard","a_targetWeight","a_targetWeightUnit","a_targetDays","p_foodSearch","p_foodFreq"
 ];
 const CHECK_IDS = ["a_rfAlcohol","a_rfDiuretics","a_rfInsulin","a_rfChemo","a_rfAntacids","a_rfStarvation","a_fatLossMod","a_fatLossSevere","a_muscleLossMild","a_muscleLossSevere","a_comorbidityMod","a_comorbiditySevere"];
 
@@ -618,7 +619,7 @@ function updateCatchUpDisplay() {
   var ibwDisplay = ibw.toFixed(1);
   var ratioDisplay = ((cu.ratio - 1) * 100).toFixed(0);
   div.innerHTML =
-    '<p><strong>Catch-up calorie target:</strong> <span class="badge warn">' + cu.catchUpKcalPerDay + ' kcal/day</span>' +
+    '<p><strong>Catch-up calorie target:</strong> <span class="badge warn" id="p_catchUpKcal" data-kcal="' + cu.catchUpKcalPerDay + '">' + cu.catchUpKcalPerDay + ' kcal/day</span>' +
     ' (' + cu.catchUpKcalPerKg.toFixed(0) + ' kcal/kg/day)</p>' +
     '<ul style="font-size:.8rem;margin-top:.3rem">' +
     '<li>RDA for age (' + escapeHtml(cu.rdaAgeRange) + '): ' + cu.rdaKcalPerKg + ' kcal/kg/day</li>' +
@@ -627,7 +628,67 @@ function updateCatchUpDisplay() {
     '<li>Estimated protein needs: ~' + cu.catchUpProteinGPerKg.toFixed(1) + ' g/kg/day</li>' +
     '</ul>' +
     '<div style="font-size:.75rem;margin-top:.2rem">Source: ' + refLink(cu.ref) + ' \u2014 Educational estimate; individualize to patient.</div>';
+  // Trigger baby food calculator
+  updateFoodCalc();
 }
+
+// ── Baby food calculator wiring ─────────────────────────────
+function updateFoodCalc() {
+  var resultDiv = $("p_foodResult");
+  if (!resultDiv) return;
+  var searchInput = $("p_foodSearch");
+  var selectedName = searchInput ? searchInput.dataset.selected : null;
+  if (!selectedName) {
+    resultDiv.innerHTML = '<span class="disclaimer">Search and select a food above, then calculate Z-scores to see feeding amounts.</span>';
+    return;
+  }
+  var food = babyFoodByName(selectedName);
+  var kcalEl = $("p_catchUpKcal");
+  var targetKcal = kcalEl ? parseInt(kcalEl.dataset.kcal) : NaN;
+  if (!food || !isFinite(targetKcal)) return;
+  var freq = parseInt($("p_foodFreq").value) || 3;
+  var result = calcFeedingAmount(food, targetKcal, freq);
+  if (result) {
+    resultDiv.innerHTML = renderFeedingAmount(result);
+  }
+}
+
+// Food search with suggestions dropdown
+$("p_foodSearch").addEventListener("input", function() {
+  var query = this.value;
+  var suggestions = searchBabyFoods(query);
+  var div = $("p_foodSuggestions");
+  if (!div) return;
+  if (!query || !suggestions.length) { div.innerHTML = ""; div.style.display = "none"; return; }
+  div.innerHTML = suggestions.map(function(f, i) {
+    return '<div class="suggestion-item" data-idx="' + i + '" data-name="' + escapeHtml(f.name) + '">' +
+      escapeHtml(f.name) + ' <span style="color:var(--muted);font-size:.75rem">' + f.kcal_100g + ' kcal/100g</span>' +
+      (f.isPowder ? ' <span class="badge muted" style="font-size:.6rem">powder</span>' : '') +
+      '</div>';
+  }).join("");
+  div.style.display = "block";
+});
+
+$("p_foodSuggestions").addEventListener("click", function(e) {
+  var item = e.target.closest(".suggestion-item");
+  if (!item) return;
+  var name = item.dataset.name;
+  var searchInput = $("p_foodSearch");
+  searchInput.value = name;
+  searchInput.dataset.selected = name;
+  this.innerHTML = "";
+  this.style.display = "none";
+  updateFoodCalc();
+});
+
+$("p_foodSearch").addEventListener("blur", function() {
+  setTimeout(function() {
+    var div = $("p_foodSuggestions");
+    if (div) { div.innerHTML = ""; div.style.display = "none"; }
+  }, 200);
+});
+
+$("p_foodFreq").addEventListener("change", updateFoodCalc);
 
 // Theme: cycle light → dark → auto (auto = follow OS preference).
 const THEME_KEY = "rhefeed_theme";

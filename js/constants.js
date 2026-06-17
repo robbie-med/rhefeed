@@ -244,5 +244,11 @@ const REFS = {
     label: "Growth curve reference data — robbie-med/ghrow",
     cite: "LMS tables from WHO 2006, CDC 2000, China NHC 2022, Korea KNGC2017, and others.",
     url: "https://github.com/robbie-med/ghrow"
+  },
+  usdaSrLegacy: {
+    key: "usdaSrLegacy",
+    label: "USDA FoodData Central — SR Legacy",
+    cite: "U.S. Department of Agriculture, Agricultural Research Service. FoodData Central, SR Legacy. 2018.",
+    url: "https://fdc.nal.usda.gov/"
   }
 };

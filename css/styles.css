@@ -488,3 +488,25 @@ input:focus, select:focus {
   .calc[open] .calc-body { display: block; }
   .copybox { border: 1px solid #ccc; }
 }
+
+/* ── Baby food suggestion dropdown ────────────────────────── */
+.suggestion-list {
+  display: none;
+  position: absolute;
+  z-index: 100;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+  min-width: 260px;
+}
+.suggestion-item {
+  padding: .35rem .6rem;
+  cursor: pointer;
+  font-size: .82rem;
+  border-bottom: 1px solid var(--border);
+}
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:hover { background: var(--surface2); }

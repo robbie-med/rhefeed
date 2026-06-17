@@ -154,6 +154,9 @@ function buildPedsNote(d) {
 
   // ═══════════ PLAN ═══════════
   planBlock(d.plan).forEach(function(x) { L.push(x); });
+  if (d.foodPlan) {
+    L.push("- Feeding: " + d.foodPlan);
+  }
   L.push("");
 
   // ═══════════ EDUCATION (delete before signing if desired) ═══════════

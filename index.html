@@ -366,6 +366,29 @@
     </section>
 
     <section class="card">
+      <p class="card-title">Baby food / formula calculator</p>
+      <p class="disclaimer" style="margin-bottom:.75rem">Select a food or infant formula to determine feeding amounts (g, oz, mL per feed) based on the catch-up calorie target.</p>
+      <div class="grid3" style="margin-bottom:.65rem">
+        <div class="field">
+          <label class="field-label" for="p_foodSearch">Search food / formula</label>
+          <input id="p_foodSearch" type="text" placeholder="e.g. similac, cereal, fruit…" autocomplete="off" />
+          <div id="p_foodSuggestions" class="suggestion-list"></div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="p_foodFreq">Feeding frequency</label>
+          <select id="p_foodFreq">
+            <option value="3" selected>TID (3×/day)</option>
+            <option value="4">QID (4×/day)</option>
+            <option value="6">q4h (6×/day)</option>
+            <option value="8">q3h (8×/day)</option>
+          </select>
+        </div>
+        <div class="field"></div>
+      </div>
+      <div id="p_foodResult" class="result-section" style="font-size:.85rem;min-height:1rem"></div>
+    </section>
+
+    <section class="card">
       <div class="run-row">
         <button class="btn primary" data-calc="peds">Calculate &amp; generate note</button>
         <span class="status-msg" data-status="peds"></span>
@@ -432,6 +455,7 @@
 <script src="js/storage.js"></script>
 <script src="js/zscore.js"></script>
 <script src="js/refeeding.js"></script>
+<script src="js/babyfood.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

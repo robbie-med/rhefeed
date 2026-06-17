@@ -1,4 +1,4 @@
-const CACHE = "rhefeed-v4";
+const CACHE = "rhefeed-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -13,6 +13,7 @@ const ASSETS = [
   "./js/storage.js",
   "./js/zscore.js",
   "./js/refeeding.js",
+  "./js/babyfood.js",
   "./js/app.js",
   "./manifest.json",
   "./icon.svg"
