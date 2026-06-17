@@ -14,9 +14,9 @@ function feedingStart({ patientType, riskLevel, weightKg, niceExtreme }) {
       ref: REFS.aspen2020,
       headline: "Nutrition",
       lines: [
-        "Start PO/NG " + estGoalLow + "–" + estGoalHigh + " kcal/day (" + p.startPctGoalLow + "–" + p.startPctGoalHigh + "% estimated goal).",
-        "Advance 33% of goal q1–2d; halve if lytes drop >20%.",
-        "If IV: GIR " + p.girStartLow + " mg/kg/min, advance " + F.peds.girAdvance + " mg/kg/min/d to max 14–" + p.girMax + "."
+        "Start PO/NG " + estGoalLow + "-" + estGoalHigh + " kcal/day (" + p.startPctGoalLow + "-" + p.startPctGoalHigh + "% estimated goal).",
+        "Advance 33% of goal q1-2d; halve if lytes drop >20%.",
+        "If IV: GIR " + p.girStartLow + " mg/kg/min, advance " + F.peds.girAdvance + " mg/kg/min/d to max 14-" + p.girMax + "."
       ]
     };
   }
@@ -28,8 +28,8 @@ function feedingStart({ patientType, riskLevel, weightKg, niceExtreme }) {
     const ex = Math.round(F.adult.niceExtremeKcalPerKg * weightKg);
     lines.push("Extreme risk: start " + F.adult.niceExtremeKcalPerKg + " kcal/kg/d (~" + ex + " kcal/d).");
   }
-  lines.push("Start " + startLow + "–" + startHigh + " kcal/d (" + F.adult.startKcalPerKgLow + "–" + F.adult.startKcalPerKgHigh + " kcal/kg/d) or 100–150 g dextrose first 24h.");
-  lines.push("Advance 33% of goal q1–2d over " + F.adult.advanceDaysMin + "–" + F.adult.advanceDaysMax + "d. Hold if lytes low.");
+  lines.push("Start " + startLow + "-" + startHigh + " kcal/d (" + F.adult.startKcalPerKgLow + "-" + F.adult.startKcalPerKgHigh + " kcal/kg/d) or 100-150 g dextrose first 24h.");
+  lines.push("Advance 33% of goal q1-2d over " + F.adult.advanceDaysMin + "-" + F.adult.advanceDaysMax + "d. Hold if lytes low.");
   return { ref: REFS.aspen2020, headline: "Nutrition", lines };
 }
 
@@ -66,9 +66,9 @@ function monitoringRecommendation({ setting, riskLevel }) {
 
 function electrolyteFramework({ rsSeverityWorst, imminent }) {
   const lines = [];
-  if (imminent) lines.push("Treat critical lytes now — escalate monitoring.");
+  if (imminent) lines.push("Treat critical lytes now - escalate monitoring.");
   lines.push("Replenish K/Mg/Phos per protocol; recheck post-repletion.");
-  lines.push("If lytes refractory: cut calories 50%, re-advance 33% q1–2d.");
+  lines.push("If lytes refractory: cut calories 50%, re-advance 33% q1-2d.");
   if (rsSeverityWorst === "Severe")
     lines.push("Hold feeding advance until lytes stabilize.");
   return { ref: REFS.aspen2020, lines };

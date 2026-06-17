@@ -4,8 +4,8 @@
 // refeeding-syndrome risk assessment, energy needs, and management framework.
 // ─────────────────────────────────────────────────────────────────────────
 
-function fmt(n, d = 1) { return isFinite(n) ? Number(n).toFixed(d) : "—"; }
-function pct(n) { return isFinite(n) ? `${n.toFixed(1)}%` : "—"; }
+function fmt(n, d = 1) { return isFinite(n) ? Number(n).toFixed(d) : "-"; }
+function pct(n) { return isFinite(n) ? `${n.toFixed(1)}%` : "-"; }
 
 function ruleLine() { return "----------------------------------------"; }
 
@@ -34,7 +34,7 @@ function energyBlock(energy) {
   L.push(`  Estimated BMR (${energy.bmr.method}): ${Math.round(energy.bmr.value)} kcal/day`);
   if (energy.needs) L.push(`  Estimated total needs (×${energy.factor}): ${Math.round(energy.needs.value)} kcal/day`);
   if (energy.balance) {
-    L.push(`  Current intake: ${Math.round(energy.intakeKcal)} kcal/day (${energy.balance.pctMet.toFixed(0)}% of needs — ${energy.balance.adequacy.grade})`);
+    L.push(`  Current intake: ${Math.round(energy.intakeKcal)} kcal/day (${energy.balance.pctMet.toFixed(0)}% of needs - ${energy.balance.adequacy.grade})`);
     L.push(`  Daily energy deficit: ${Math.round(energy.balance.dailyDeficit)} kcal/day`);
     if (isFinite(energy.balance.cumulative))
       L.push(`  Estimated cumulative deficit: ${Math.round(energy.balance.cumulative).toLocaleString()} kcal`);
@@ -53,7 +53,7 @@ function buildAdultNote(d) {
   L.push(`Wt: ${fmt(d.weightKg)} kg | Ht: ${fmt(d.heightCm)} cm | BMI: ${fmt(d.bmi)}` +
          (d.bmiClass ? ` (${d.bmiClass.label})` : ""));
   if (isFinite(d.wtLossPct)) L.push(`Weight change: ${pct(d.wtLossPct)} loss from usual weight`);
-  L.push(`Days little/no intake: ${isFinite(d.daysNoIntake) ? d.daysNoIntake : "—"}`);
+  L.push(`Days little/no intake: ${isFinite(d.daysNoIntake) ? d.daysNoIntake : "-"}`);
   L.push("");
   L.push(`Phosphate: ${fmt(d.phosBase, 2)} -> ${fmt(d.phosNow, 2)} mmol/L (${d.phosDropLabel})`);
   if (d.kLine) L.push(`Potassium: ${d.kLine}`);
@@ -80,7 +80,7 @@ function buildAdultNote(d) {
   planBlock(d.plan).forEach(x => L.push(x));
   L.push("");
   L.push("Refs: ASPEN 2020 (doi:10.1002/ncp.10474); NICE CG32.");
-  L.push("Educational decision support only — individualize to local protocol.");
+  L.push("Educational decision support only - individualize to local protocol.");
   return L.join("\n");
 }
 
