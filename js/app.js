@@ -191,6 +191,25 @@ function runAdult() {
 
   const plan = buildPlan({ patientType: "adult", setting: $("a_setting").value, weightKg, riskLevel: riskLabel, niceExtreme: nice.extreme, rsSeverityWorst, imminent: imminent.length > 0 });
 
+  // Adult weight-gain target (refeeding calculator)
+  var refeedingSection = "";
+  var targetKg = $("a_targetWeight").value ? weightToKg(num("a_targetWeight"), $("a_targetWeightUnit").value) : NaN;
+  var targetDays = $("a_targetDays").value ? intVal("a_targetDays") : NaN;
+  if (isFinite(targetKg) && isFinite(targetDays) && targetKg > weightKg && targetDays > 0) {
+    var wg = adultWeightGainTarget(weightKg, targetKg, targetDays);
+    if (wg) {
+      refeedingSection = '<h3>Weight-gain target (adult)</h3>' +
+        '<p>To gain <strong>' + wg.kgToGain.toFixed(1) + ' kg</strong> over ' + wg.daysToTarget + ' days:' +
+        ' <span class="badge warn">+' + wg.dailySurplusKcal + ' kcal/day</span> surplus' +
+        ' (~' + wg.weeklyGainKg.toFixed(2) + ' kg/week)</p>' +
+        '<ul style="font-size:.8rem">' +
+        '<li>Total surplus needed: ' + wg.totalSurplusKcal.toLocaleString() + ' kcal</li>' +
+        '<li>Energy cost of tissue: ~' + wg.kcalPerKgGain.toLocaleString() + ' kcal/kg gained</li>' +
+        '</ul>' +
+        '<div class="work-ref">Source: ' + refLink(wg.ref) + '</div>';
+    }
+  }
+
   // Sections HTML
   let sections = `<div class="kpiRow">
     <div class="kpi"><div class="label">BMI</div><div class="value">${bmi.toFixed(1)}</div><div class="label">${escapeHtml(bmiC.label)}</div></div>
@@ -213,6 +232,8 @@ function runAdult() {
   sections += calcDetails("Show calculation — electrolyte % drop", [`% drop = (baseline − current) ÷ baseline × 100`, `Phosphate: (${phosBase.toFixed(2)} − ${phosNow.toFixed(2)}) ÷ ${phosBase.toFixed(2)} × 100 = ${dropLabel(phosDropPct)}`, `Severity bands: mild 10–20%, moderate 20–30%, severe >30% (within 5 days)`], REFS.aspen2020);
   sections += renderEnergy(energy);
 
+  if (refeedingSection) sections += refeedingSection;
+
   const heroSub = `${imminent.map(x => `<span class="badge bad">${escapeHtml(x)}</span>`).join("")}
     ${nice.highRisk ? `<span class="badge warn">NICE high risk</span>` : ""}
     <span class="badge ${badge.cls}">ASPEN: ${escapeHtml(aspen.level)}</span>
@@ -225,7 +246,11 @@ function runAdult() {
     mgLine: isFinite(mgNow) ? `${mgBase.toFixed(2)} -> ${mgNow.toFixed(2)} (${dropLabel(mgDropPct)})` : null,
     aspen, nice, rsSeverityWorst, imminentFlags: imminent, overallBadge: badge,
     energy: energy ? { bmr: energy.bmr, needs: energy.needs, factor: energy.factor, intakeKcal: energy.intakeKcal, balance: energy.balance, starvation: energy.starvation } : null,
-    plan
+    plan,
+    refeeding: isFinite(targetKg) && targetKg > weightKg ? [
+      "Weight-gain target: " + targetKg.toFixed(1) + " kg",
+      "Target reached via: Calculate → see Weight-gain target section"
+    ] : null
   });
 
   renderResults(document.querySelector('[data-results="adult"]'), { heroBadge: badge, heroSub, sections, plan, noteText });
@@ -335,7 +360,10 @@ function runPeds() {
     phosBase: isFinite(phosBase) ? phosBase : null, phosNow: isFinite(phosNow) ? phosNow : null,
     phosDropLabel: dropLabel(phosDropPct),
     energy: energy ? { bmr: energy.bmr, needs: energy.needs, factor: energy.factor, intakeKcal: energy.intakeKcal, balance: energy.balance, starvation: energy.starvation } : null,
-    plan
+    plan,
+    refeeding: isFinite(weightKg) ? [
+      "See pediatric catch-up calculator in form for RDA × IBW ÷ actual weight target"
+    ] : null
   });
 
   renderResults(document.querySelector('[data-results="peds"]'), { heroBadge: badge, heroSub, sections, plan, noteText });
@@ -358,7 +386,8 @@ const FIELD_IDS = [
   "a_daysNoIntake","a_intakeKcal","a_factor","a_phosBase","a_phosUnit","a_phosNow","a_phosUnitNow","a_kBase","a_mgBase","a_kNow","a_mgNow",
   "p_setting","p_sex","p_age","p_ageUnit","p_weight","p_weightUnit","p_height","p_heightUnit","p_usualWeight","p_usualWeightUnit",
   "p_daysLowIntake","p_intakeKcal","p_factor","p_whz","p_bmiZ","p_muacZ","p_lhaZ","p_zDecline","p_velocityPct",
-  "p_phosBase","p_phosUnit","p_phosNow","p_phosUnitNow","p_lytes","p_kBase","p_kNow","p_comorbidity"
+  "p_phosBase","p_phosUnit","p_phosNow","p_phosUnitNow","p_lytes","p_kBase","p_kNow","p_comorbidity",
+  "p_zStandard","a_targetWeight","a_targetWeightUnit","a_targetDays"
 ];
 const CHECK_IDS = ["a_rfAlcohol","a_rfDiuretics","a_rfInsulin","a_rfChemo","a_rfAntacids","a_rfStarvation","a_fatLossMod","a_fatLossSevere","a_muscleLossMild","a_muscleLossSevere","a_comorbidityMod","a_comorbiditySevere"];
 
@@ -430,6 +459,159 @@ function loadFromHash() {
 // ── Wire up ────────────────────────────────────────────────
 document.querySelector('[data-calc="adult"]').addEventListener("click", runAdult);
 document.querySelector('[data-calc="peds"]').addEventListener("click", runPeds);
+
+// ── Z-score calculator (pediatric pane) ────────────────────
+function populateZStandards() {
+  var sel = $("p_zStandard");
+  if (!sel) return;
+  var standards = zStandards();
+  sel.innerHTML = standards.map(function(s, i) {
+    return '<option value="' + escapeHtml(s) + '"' + (i === 0 ? ' selected' : '') + '>' + escapeHtml(s) + '</option>';
+  }).join("");
+}
+populateZStandards();
+
+$("btnCalcZScores").addEventListener("click", function() {
+  var status = $("p_zStatus");
+  var standard = $("p_zStandard").value;
+  var sex = $("p_sex").value;
+  var ageYears = ageToYears(num("p_age"), $("p_ageUnit").value);
+  var weightKg = weightToKg(num("p_weight"), $("p_weightUnit").value);
+  var heightCm = $("p_height").value ? heightToCm(num("p_height"), $("p_heightUnit").value) : NaN;
+  var ageMonths = ageYears * 12;
+
+  if (!(weightKg > 0) || !(heightCm > 0) || !(ageYears > 0)) {
+    status.textContent = "Need weight, length/height, and age.";
+    status.style.color = "var(--bad)";
+    return;
+  }
+
+  status.textContent = "Loading reference data\u2026";
+  status.style.color = "var(--muted)";
+
+  // Determine which curves to fetch based on standard
+  var curves = zCurvesByStandard(standard);
+  var wflCurve = curves.filter(function(c) { return c.family === "weight-height"; })[0];
+  var bmiCurve = curves.filter(function(c) { return c.family === "bmi-age"; })[0];
+  var lenCurve = curves.filter(function(c) { return c.family === "height-age"; })[0];
+
+  if (!wflCurve && !bmiCurve && !lenCurve) {
+    status.textContent = "No curves available for " + escapeHtml(standard) + ".";
+    status.style.color = "var(--bad)";
+    return;
+  }
+
+  // Fetch all curves in parallel, then compute
+  var promises = [];
+  var results = {};
+
+  function fetchAndCompute(curve, label, computeFn) {
+    if (!curve) return Promise.resolve();
+    return zFetchCurve(curve, sex).then(function(rows) {
+      if (!rows || !rows.length) return;
+      results[label] = computeFn(rows);
+    });
+  }
+
+  // Weight-for-length z-score
+  promises.push(fetchAndCompute(wflCurve, "whz", function(rows) {
+    var xKey = zFindXCol(rows);
+    if (!xKey) return null;
+    var lms = zInterpolateLMS(rows, heightCm, xKey);
+    if (!lms) return null;
+    var z = zScoreFromLMS(weightKg, lms);
+    var pct = zToPercentile(z);
+    // Also get IBW for catch-up
+    var ibw = zWeightAtPercentile(rows, heightCm, xKey);
+    return { z: z, percentile: pct, ibw: ibw, rows: rows, xKey: xKey };
+  }));
+
+  // BMI-for-age z-score
+  var bmiVal = isFinite(heightCm) ? weightKg / ((heightCm / 100) * (heightCm / 100)) : NaN;
+  promises.push(fetchAndCompute(bmiCurve, "bmiZ", function(rows) {
+    var xKey = zFindXCol(rows);
+    if (!xKey || !isFinite(bmiVal)) return null;
+    var lms = zInterpolateLMS(rows, ageMonths, xKey);
+    if (!lms) return null;
+    var z = zScoreFromLMS(bmiVal, lms);
+    return { z: z, percentile: zToPercentile(z) };
+  }));
+
+  // Length/height-for-age z-score
+  promises.push(fetchAndCompute(lenCurve, "lhaZ", function(rows) {
+    var xKey = zFindXCol(rows);
+    if (!xKey) return null;
+    var lms = zInterpolateLMS(rows, ageMonths, xKey);
+    if (!lms) return null;
+    var z = zScoreFromLMS(heightCm, lms);
+    return { z: z, percentile: zToPercentile(z) };
+  }));
+
+  Promise.all(promises).then(function() {
+    var msgs = [];
+    // Populate p_whz
+    if (results.whz && isFinite(results.whz.z)) {
+      $("p_whz").value = results.whz.z.toFixed(2);
+      msgs.push("WFL z=" + results.whz.z.toFixed(2));
+      // Store IBW for catch-up calculator
+      if (isFinite(results.whz.ibw)) {
+        $("p_whz").dataset.ibw = results.whz.ibw;
+      }
+    }
+    // Populate p_bmiZ
+    if (results.bmiZ && isFinite(results.bmiZ.z)) {
+      $("p_bmiZ").value = results.bmiZ.z.toFixed(2);
+      msgs.push("BMI z=" + results.bmiZ.z.toFixed(2));
+    }
+    // Populate p_lhaZ
+    if (results.lhaZ && isFinite(results.lhaZ.z)) {
+      $("p_lhaZ").value = results.lhaZ.z.toFixed(2);
+      msgs.push("LHA z=" + results.lhaZ.z.toFixed(2));
+    }
+
+    if (msgs.length) {
+      status.textContent = "Done: " + msgs.join(", ");
+      status.style.color = "var(--ok)";
+      // Trigger catch-up display
+      updateCatchUpDisplay();
+    } else {
+      status.textContent = "Could not compute z-scores \u2014 data not available for this standard/sex.";
+      status.style.color = "var(--bad)";
+    }
+  }).catch(function(err) {
+    status.textContent = "Error loading growth data. Check network connection.";
+    status.style.color = "var(--bad)";
+    console.error(err);
+  });
+});
+
+// ── Catch-up display updater (pediatric) ────────────────────
+function updateCatchUpDisplay() {
+  var div = $("p_catchUpResult");
+  if (!div) return;
+  var weightKg = weightToKg(num("p_weight"), $("p_weightUnit").value);
+  var ageYears = ageToYears(num("p_age"), $("p_ageUnit").value);
+  var ibw = parseFloat($("p_whz").dataset.ibw);
+  if (!isFinite(ibw) || !isFinite(weightKg) || !isFinite(ageYears)) {
+    div.innerHTML = '<span class="disclaimer">Calculate Z-scores first to see catch-up calorie targets.</span>';
+    return;
+  }
+  var cu = catchUpCaloriesPeds(ageYears, weightKg, ibw);
+  if (!cu) { div.innerHTML = ""; return; }
+  var ibwDisplay = ibw.toFixed(1);
+  var ratioDisplay = ((cu.ratio - 1) * 100).toFixed(0);
+  div.innerHTML =
+    '<p><strong>Catch-up calorie target:</strong> <span class="badge warn">' + cu.catchUpKcalPerDay + ' kcal/day</span>' +
+    ' (' + cu.catchUpKcalPerKg.toFixed(0) + ' kcal/kg/day)</p>' +
+    '<ul style="font-size:.8rem;margin-top:.3rem">' +
+    '<li>RDA for age (' + escapeHtml(cu.rdaAgeRange) + '): ' + cu.rdaKcalPerKg + ' kcal/kg/day</li>' +
+    '<li>IBW (50th %ile for length): ' + ibwDisplay + ' kg \u2014 patient is ' + ratioDisplay + '% below IBW</li>' +
+    '<li>Formula: ' + cu.rdaKcalPerKg + ' \u00d7 ' + ibwDisplay + ' \u00f7 ' + weightKg.toFixed(1) + ' = ' + cu.catchUpKcalPerKg.toFixed(0) + ' kcal/kg/day</li>' +
+    '<li>Estimated protein needs: ~' + cu.catchUpProteinGPerKg.toFixed(1) + ' g/kg/day</li>' +
+    '</ul>' +
+    '<div style="font-size:.75rem;margin-top:.2rem">Source: ' + refLink(cu.ref) + ' \u2014 Educational estimate; individualize to patient.</div>';
+}
+
 // Theme: cycle light → dark → auto (auto = follow OS preference).
 const THEME_KEY = "rhefeed_theme";
 function applyTheme(mode) {

@@ -149,6 +149,30 @@ const INTAKE_BANDS = {
   moderate: 25    // 26–50% moderate; ≤25% severe
 };
 
+// ── Growth-chart Z-score data source ───────────────────────────────────────
+// Base URL for fetching LMS CSV reference data from robbie-med/ghrow.
+const GHHROW_BASE = "https://raw.githubusercontent.com/robbie-med/ghrow/main/";
+
+// ── Pediatric catch-up calorie calculation ─────────────────────────────────
+// RDA kcal/kg by age band (DRI / Institute of Medicine). Used in the
+// classic catch-up formula: Catch-up kcal/day = RDA_kcal/kg × IBW ÷ actual wt.
+const RDA_KCAL_PER_KG = [
+  { maxAge: 0.5,  kcalPerKg: 108, ageRange: "0–6 months" },
+  { maxAge: 1,    kcalPerKg: 98,  ageRange: "6–12 months" },
+  { maxAge: 3,    kcalPerKg: 102, ageRange: "1–3 years" },
+  { maxAge: 6,    kcalPerKg: 90,  ageRange: "4–6 years" },
+  { maxAge: 10,   kcalPerKg: 70,  ageRange: "7–10 years" },
+  { maxAge: 14,   kcalPerKg: 55,  ageRange: "11–14 years (male)" },  // female: 47
+  { maxAge: 18,   kcalPerKg: 45,  ageRange: "15–18 years (male)" },  // female: 40
+  { maxAge: Infinity, kcalPerKg: 40, ageRange: "Adult" }
+];
+// Default protein estimate for catch-up (g/kg/day); individualized by clinician.
+const RDA_PROTEIN_PER_KG = 1.5;
+
+// ── Adult weight-gain target ───────────────────────────────────────────────
+// ~7,700 kcal surplus per kg of tissue gain (~3,500 kcal/lb).
+const KCAL_PER_KG_GAIN = 7700;
+
 // ── Source documentation (real, canonical links) ──────────────────────────
 // Each calculation in the app cites a key whose entry lives here, so any number
 // can be traced to primary literature. DOIs are permanent publisher links.
@@ -196,5 +220,29 @@ const REFS = {
     label: "WHO Body Mass Index classification (adults)",
     cite: "World Health Organization. BMI thresholds.",
     url: "https://www.who.int/data/gho/data/themes/topics/topic-details/GHO/body-mass-index"
+  },
+  driRda: {
+    key: "driRda",
+    label: "Dietary Reference Intakes for Energy",
+    cite: "Institute of Medicine. Dietary Reference Intakes for Energy, Carbohydrate, Fiber, Fat, Fatty Acids, Cholesterol, Protein, and Amino Acids. 2005.",
+    url: "https://doi.org/10.17226/10490"
+  },
+  whoSam: {
+    key: "whoSam",
+    label: "WHO Guideline — Management of severe acute malnutrition in infants and children",
+    cite: "World Health Organization. 2013.",
+    url: "https://www.who.int/publications/i/item/9789241506328"
+  },
+  adultWeightGain: {
+    key: "adultWeightGain",
+    label: "Energy cost of tissue deposition",
+    cite: "~7,700 kcal per kg (~3,500 kcal per lb) of body tissue gained. Hall KD et al. Am J Clin Nutr. 2012.",
+    url: "https://doi.org/10.3945/ajcn.112.036350"
+  },
+  ghrow: {
+    key: "ghrow",
+    label: "Growth curve reference data — robbie-med/ghrow",
+    cite: "LMS tables from WHO 2006, CDC 2000, China NHC 2022, Korea KNGC2017, and others.",
+    url: "https://github.com/robbie-med/ghrow"
   }
 };

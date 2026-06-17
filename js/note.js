@@ -77,6 +77,11 @@ function buildAdultNote(d) {
   L.push("");
   energyBlock(d.energy).forEach(x => L.push(x));
   L.push("");
+  if (d.refeeding) {
+    L.push("REFEEDING / CATCH-UP:");
+    d.refeeding.forEach(function(x) { L.push("  " + x); });
+    L.push("");
+  }
   planBlock(d.plan).forEach(x => L.push(x));
   L.push("");
   L.push("Refs: ASPEN 2020 (doi:10.1002/ncp.10474); NICE CG32.");
@@ -117,6 +122,11 @@ function buildPedsNote(d) {
   L.push("");
   energyBlock(d.energy).forEach(x => L.push(x));
   L.push("");
+  if (d.refeeding) {
+    L.push("REFEEDING / CATCH-UP:");
+    d.refeeding.forEach(function(x) { L.push("  " + x); });
+    L.push("");
+  }
   planBlock(d.plan).forEach(x => L.push(x));
   L.push("");
   L.push("Refs: ASPEN 2020 (doi:10.1002/ncp.10474); AND/ASPEN peds malnutrition (Becker 2014); Schofield 1985.");
