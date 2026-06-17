@@ -380,7 +380,11 @@ function runPeds() {
     energy: energy ? { bmr: energy.bmr, needs: energy.needs, factor: energy.factor, intakeKcal: energy.intakeKcal, balance: energy.balance, starvation: energy.starvation } : null,
     plan,
     catchUp: catchUpData,
-    foodPlan: $("p_foodSearch").dataset.selected ? ($("p_foodSearch").dataset.selected + " — see Baby food calculator for per-feed amounts") : null,
+    foodPlan: $("p_foodSearch").dataset.selected ? (function() {
+      var food = babyFoodByName($("p_foodSearch").dataset.selected);
+      var freq = parseInt($("p_foodFreq").value) || 3;
+      return food && isFinite(weightKg) ? feedingPlanString(food, catchUpData ? catchUpData.catchUpKcalPerDay : null, freq) : null;
+    })() : null,
     refeeding: null
   });
 
