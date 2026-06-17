@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────
 // Baby food & infant formula catalog + feeding-amount calculator.
-// Data from USDA FoodData Central SR Legacy (food_category_id=3).
-// 344 foods with kcal, K, Mg, P per 100g.
-// Source: fdc.nal.usda.gov
+// Data from USDA FoodData Central SR Legacy. Formula kcal normalized to
+// prepared (liquid/RTF) density (~20 kcal/oz = 67 kcal/100g).
+// 344 foods. Source: fdc.nal.usda.gov
 // ─────────────────────────────────────────────────────────────────────────
 
 const BABY_FOODS = [
@@ -23,14 +23,14 @@ const BABY_FOODS = [
 {"name":"Dessert, banana yogurt, strained","kcal_100g":78.0,"k_mg_100g":100.0,"mg_mg_100g":10.0,"p_mg_100g":28.0,"isPowder":false,"tags":["dessert"]},
 {"name":"Fruit supreme dessert","kcal_100g":73.0,"k_mg_100g":129.0,"mg_mg_100g":7.0,"p_mg_100g":9.0,"isPowder":false,"tags":["fruit","dessert"]},
 {"name":"Grape juice, no sugar, canned","kcal_100g":62.0,"k_mg_100g":90.0,"mg_mg_100g":10.0,"p_mg_100g":11.0,"isPowder":false,"tags":["juice"]},
-{"name":"Enfamil, Newborn, with Ara and Dha, powder","kcal_100g":516.0,"k_mg_100g":550.0,"mg_mg_100g":41.0,"p_mg_100g":220.0,"isPowder":true,"tags":["formula"]},
-{"name":"Enfamil, Premium Lipil, Infant, powder","kcal_100g":510.0,"k_mg_100g":550.0,"mg_mg_100g":41.0,"p_mg_100g":220.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Newborn, with Ara and Dha, powder","kcal_100g":67,"k_mg_100g":71.4,"mg_mg_100g":5.3,"p_mg_100g":28.6,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Premium Lipil, Infant, powder","kcal_100g":129.0,"k_mg_100g":139.1,"mg_mg_100g":10.4,"p_mg_100g":55.6,"isPowder":true,"tags":["formula"]},
 {"name":"Enfamil, Premium Lipil, Infant, Liquid concentrate, not reconstituted","kcal_100g":129.0,"k_mg_100g":139.0,"mg_mg_100g":10.0,"p_mg_100g":56.0,"isPowder":false,"tags":["formula"]},
 {"name":"Enfamil, Premium, Infant, Liquid concentrate, not reconstituted","kcal_100g":129.0,"k_mg_100g":138.0,"mg_mg_100g":10.0,"p_mg_100g":55.0,"isPowder":false,"tags":["formula"]},
-{"name":"Enfamil, Enfagrow, Gentlease, Toddler transitions, with Ara and Dha, powder","kcal_100g":500.0,"k_mg_100g":650.0,"mg_mg_100g":40.0,"p_mg_100g":650.0,"isPowder":true,"tags":["formula","toddler"]},
-{"name":"Similac, GO And Grow, powder, with Ara and Dha","kcal_100g":512.0,"k_mg_100g":768.0,"mg_mg_100g":46.0,"p_mg_100g":666.0,"isPowder":true,"tags":["formula"]},
-{"name":"Gerber, Good Start 2 Soy, with iron, powder","kcal_100g":501.0,"k_mg_100g":581.0,"mg_mg_100g":55.0,"p_mg_100g":316.0,"isPowder":true,"tags":["formula"]},
-{"name":"Enfamil, Nutramigen, PurAmino, powder, not reconstituted","kcal_100g":512.0,"k_mg_100g":550.0,"mg_mg_100g":55.0,"p_mg_100g":260.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Enfagrow, Gentlease, Toddler transitions, with Ara and Dha, powder","kcal_100g":67,"k_mg_100g":87.1,"mg_mg_100g":5.4,"p_mg_100g":87.1,"isPowder":true,"tags":["formula","toddler"]},
+{"name":"Similac, GO And Grow, powder, with Ara and Dha","kcal_100g":66.0,"k_mg_100g":99.0,"mg_mg_100g":5.9,"p_mg_100g":85.9,"isPowder":true,"tags":["formula"]},
+{"name":"Gerber, Good start 2 Soy, with iron, powder","kcal_100g":65.0,"k_mg_100g":75.4,"mg_mg_100g":7.1,"p_mg_100g":41.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Nutramigen, PurAmino, powder, not reconstituted","kcal_100g":67,"k_mg_100g":72.0,"mg_mg_100g":7.2,"p_mg_100g":34.0,"isPowder":true,"tags":["formula"]},
 {"name":"Enfamil, Premature, 20 calories ready-to-feed Low iron","kcal_100g":66.0,"k_mg_100g":64.0,"mg_mg_100g":6.0,"p_mg_100g":54.0,"isPowder":false,"tags":["formula"]},
 {"name":"Rice cereal, dry, Earths Best Organic Whole Grain, fortified only with iron","kcal_100g":386.0,"k_mg_100g":184.0,"mg_mg_100g":112.0,"p_mg_100g":256.0,"isPowder":false,"tags":["cereal"]},
 {"name":"Juice, apple-sweet potato","kcal_100g":47.0,"k_mg_100g":137.0,"mg_mg_100g":7.0,"p_mg_100g":14.0,"isPowder":false,"tags":["juice"]},
@@ -39,13 +39,13 @@ const BABY_FOODS = [
 {"name":"Cereal, brown rice, dry, instant","kcal_100g":406.0,"k_mg_100g":386.0,"mg_mg_100g":28.0,"p_mg_100g":272.0,"isPowder":false,"tags":["cereal"]},
 {"name":"Green beans and turkey, strained","kcal_100g":51.0,"k_mg_100g":188.0,"mg_mg_100g":22.0,"p_mg_100g":56.0,"isPowder":false,"tags":["meat"]},
 {"name":"Dinner, chicken and rice","kcal_100g":51.0,"k_mg_100g":60.0,"mg_mg_100g":8.0,"p_mg_100g":20.0,"isPowder":false,"tags":["meat","dinner"]},
-{"name":"Gerber, Good Start, Protect Plus, powder","kcal_100g":512.0,"k_mg_100g":553.0,"mg_mg_100g":36.0,"p_mg_100g":195.0,"isPowder":true,"tags":["formula"]},
-{"name":"Gerber Good Start 2, Gentle Plus, powder","kcal_100g":492.0,"k_mg_100g":531.0,"mg_mg_100g":34.0,"p_mg_100g":522.0,"isPowder":true,"tags":["formula"]},
-{"name":"Gerber, Good Start 2, Protect Plus, powder","kcal_100g":501.0,"k_mg_100g":553.0,"mg_mg_100g":36.0,"p_mg_100g":543.0,"isPowder":true,"tags":["formula"]},
-{"name":"Enfamil, Enfagrow, Soy, Toddler transitions, with Ara and Dha, powder","kcal_100g":476.0,"k_mg_100g":570.0,"mg_mg_100g":52.0,"p_mg_100g":620.0,"isPowder":true,"tags":["formula","toddler"]},
+{"name":"Gerber, Good start, Protect plus, powder","kcal_100g":65.0,"k_mg_100g":70.2,"mg_mg_100g":4.6,"p_mg_100g":24.8,"isPowder":true,"tags":["formula"]},
+{"name":"Gerber Good start 2, Gentle plus, powder","kcal_100g":66.0,"k_mg_100g":71.2,"mg_mg_100g":4.6,"p_mg_100g":70.0,"isPowder":true,"tags":["formula"]},
+{"name":"Gerber, Good start 2, Protect plus, powder","kcal_100g":66.0,"k_mg_100g":72.9,"mg_mg_100g":4.7,"p_mg_100g":71.5,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Enfagrow, Soy, Toddler transitions, with Ara and Dha, powder","kcal_100g":67,"k_mg_100g":80.2,"mg_mg_100g":7.3,"p_mg_100g":87.3,"isPowder":true,"tags":["formula","toddler"]},
 {"name":"Enfamil, Premature, 24 calories ready-to-feed Low iron","kcal_100g":67.0,"k_mg_100g":64.0,"mg_mg_100g":6.0,"p_mg_100g":54.0,"isPowder":false,"tags":["formula"]},
 {"name":"Enfamil, Premium, Infant, ready-to-feed","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":28.0,"isPowder":false,"tags":["formula"]},
-{"name":"Enfamil, Premium, Infant, powder","kcal_100g":510.0,"k_mg_100g":550.0,"mg_mg_100g":41.0,"p_mg_100g":220.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Premium, Infant, powder","kcal_100g":66.0,"k_mg_100g":71.2,"mg_mg_100g":5.3,"p_mg_100g":28.5,"isPowder":true,"tags":["formula"]},
 {"name":"Gerber, Banana with orange medley","kcal_100g":69.0,"k_mg_100g":265.0,"mg_mg_100g":18.0,"p_mg_100g":19.0,"isPowder":false,"tags":[]},
 {"name":"Vegetable and brown rice, strained","kcal_100g":69.0,"k_mg_100g":135.0,"mg_mg_100g":15.0,"p_mg_100g":33.0,"isPowder":false,"tags":["vegetable"]},
 {"name":"Peas and brown rice","kcal_100g":64.0,"k_mg_100g":93.0,"mg_mg_100g":25.0,"p_mg_100g":52.0,"isPowder":false,"tags":[]},
@@ -103,16 +103,16 @@ const BABY_FOODS = [
 {"name":"Juice, apple, with calcium","kcal_100g":46.0,"k_mg_100g":92.0,"mg_mg_100g":6.0,"p_mg_100g":8.0,"isPowder":false,"tags":["juice"]},
 {"name":"Enfamil, Enfacare, ready-to-feed, with Ara and Dha","kcal_100g":73.0,"k_mg_100g":76.0,"mg_mg_100g":6.0,"p_mg_100g":48.0,"isPowder":false,"tags":["formula"]},
 {"name":"Yogurt, whole milk, with fruit, multigrain cereal and added Dha fortified","kcal_100g":98.0,"k_mg_100g":149.0,"mg_mg_100g":15.0,"p_mg_100g":95.0,"isPowder":false,"tags":["cereal","fruit","dessert"]},
-{"name":"Alimentum Advance, with iron, powder, not reconstituted, with Dha and Ara","kcal_100g":517.0,"k_mg_100g":598.0,"mg_mg_100g":38.0,"p_mg_100g":382.0,"isPowder":true,"tags":[]},
+{"name":"Alimentum Advance, with iron, powder, not reconstituted, with Dha and Ara","kcal_100g":67,"k_mg_100g":77.5,"mg_mg_100g":4.9,"p_mg_100g":49.5,"isPowder":true,"tags":["formula"]},
 {"name":"Mashed cheddar potatoes and broccoli, toddlers","kcal_100g":48.0,"k_mg_100g":118.0,"mg_mg_100g":8.0,"p_mg_100g":24.0,"isPowder":false,"tags":["toddler"]},
 {"name":"Yogurt, whole milk, with fruit, multigrain cereal and added iron fortified","kcal_100g":92.0,"k_mg_100g":143.0,"mg_mg_100g":15.0,"p_mg_100g":86.0,"isPowder":false,"tags":["cereal","fruit","dessert"]},
-{"name":"Good Start Soy, with Dha and Ara, liquid concentrate","kcal_100g":132.0,"k_mg_100g":154.0,"mg_mg_100g":15.0,"p_mg_100g":84.0,"isPowder":false,"tags":["formula"]},
-{"name":"Toddler Enfagrow, Toddler Transitions, with Ara and Dha, powder","kcal_100g":505.0,"k_mg_100g":650.0,"mg_mg_100g":40.0,"p_mg_100g":650.0,"isPowder":true,"tags":["toddler"]},
+{"name":"Good start Soy, with Dha and Ara, liquid concentrate","kcal_100g":132.0,"k_mg_100g":154.0,"mg_mg_100g":15.0,"p_mg_100g":84.0,"isPowder":false,"tags":["formula"]},
+{"name":"Toddler Enfagrow, Toddler Transitions, with Ara and Dha, powder","kcal_100g":67,"k_mg_100g":86.2,"mg_mg_100g":5.3,"p_mg_100g":86.2,"isPowder":true,"tags":["formula","toddler"]},
 {"name":"Toddler Enfagrow Premium (formerly Enfamil, Lipil, Next Step), ready-to-fee","kcal_100g":64.0,"k_mg_100g":89.0,"mg_mg_100g":5.0,"p_mg_100g":89.0,"isPowder":false,"tags":["formula","toddler"]},
 {"name":"Enfamil, Newborn, with Dha and Ara, ready-to-feed","kcal_100g":68.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":28.0,"isPowder":false,"tags":["formula"]},
-{"name":"Gerber, Good Start 2 Soy, with iron, ready-to-feed","kcal_100g":65.0,"k_mg_100g":76.0,"mg_mg_100g":7.0,"p_mg_100g":70.0,"isPowder":false,"tags":["formula"]},
-{"name":"Gerber, Good Start, Protect Plus, ready-to-feed","kcal_100g":65.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":25.0,"isPowder":false,"tags":["formula"]},
-{"name":"Gerber Good Start 2, Gentle Plus, ready-to-feed","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":null,"p_mg_100g":70.0,"isPowder":false,"tags":["formula"]},
+{"name":"Gerber, Good start 2 Soy, with iron, ready-to-feed","kcal_100g":65.0,"k_mg_100g":76.0,"mg_mg_100g":7.0,"p_mg_100g":70.0,"isPowder":false,"tags":["formula"]},
+{"name":"Gerber, Good start, Protect plus, ready-to-feed","kcal_100g":65.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":25.0,"isPowder":false,"tags":["formula"]},
+{"name":"Gerber Good start 2, Gentle plus, ready-to-feed","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":null,"p_mg_100g":70.0,"isPowder":false,"tags":["formula"]},
 {"name":"Fruit, banana and strawberry, junior","kcal_100g":109.0,"k_mg_100g":395.0,"mg_mg_100g":30.0,"p_mg_100g":24.0,"isPowder":false,"tags":["fruit"]},
 {"name":"Banana with mixed berries, strained","kcal_100g":92.0,"k_mg_100g":283.0,"mg_mg_100g":23.0,"p_mg_100g":20.0,"isPowder":false,"tags":[]},
 {"name":"Multigrain whole grain cereal, dry fortified","kcal_100g":407.0,"k_mg_100g":467.0,"mg_mg_100g":95.0,"p_mg_100g":333.0,"isPowder":false,"tags":["cereal"]},
@@ -167,22 +167,22 @@ const BABY_FOODS = [
 {"name":"Juice, apple and grape","kcal_100g":46.0,"k_mg_100g":90.0,"mg_mg_100g":6.0,"p_mg_100g":5.0,"isPowder":false,"tags":["juice"]},
 {"name":"Similac, Isomil, Advance with iron, liquid concentrate","kcal_100g":128.0,"k_mg_100g":138.0,"mg_mg_100g":10.0,"p_mg_100g":96.0,"isPowder":false,"tags":["formula"]},
 {"name":"Similac, Isomil, Advance with iron, ready-to-feed","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":49.0,"isPowder":false,"tags":["formula"]},
-{"name":"Similac, Isomil, Advance with iron, powder, not reconstituted","kcal_100g":517.0,"k_mg_100g":555.0,"mg_mg_100g":39.0,"p_mg_100g":386.0,"isPowder":true,"tags":["formula"]},
-{"name":"Good Start Supreme, with iron, Dha and Ara, ready-to-feed","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":24.0,"isPowder":false,"tags":["formula"]},
-{"name":"Good Start Supreme, with iron, Dha and Ara, prepared from liquid concentrat","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":24.0,"isPowder":false,"tags":["formula"]},
+{"name":"Similac, Isomil, Advance with iron, powder, not reconstituted","kcal_100g":66.0,"k_mg_100g":70.9,"mg_mg_100g":5.0,"p_mg_100g":49.3,"isPowder":true,"tags":["formula"]},
+{"name":"Good start Supreme, with iron, Dha and Ara, ready-to-feed","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":24.0,"isPowder":false,"tags":["formula"]},
+{"name":"Good start Supreme, with iron, Dha and Ara, prepared from liquid concentrat","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":24.0,"isPowder":false,"tags":["formula"]},
 {"name":"Enfamil Gentlease, with iron, prepared from powder","kcal_100g":68.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":30.0,"isPowder":true,"tags":["formula"]},
 {"name":"Fortified cereal bar, fruit filling","kcal_100g":344.0,"k_mg_100g":180.0,"mg_mg_100g":19.0,"p_mg_100g":247.0,"isPowder":false,"tags":["cereal","fruit"]},
-{"name":"Enfamil, Gentlease, with Ara and Dha powder not reconstituted","kcal_100g":516.0,"k_mg_100g":550.0,"mg_mg_100g":41.0,"p_mg_100g":230.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Gentlease, with Ara and Dha powder not reconstituted","kcal_100g":67,"k_mg_100g":71.4,"mg_mg_100g":5.3,"p_mg_100g":29.9,"isPowder":true,"tags":["formula"]},
 {"name":"Enfamil, Enfagrow, Soy, Toddler ready-to-feed","kcal_100g":65.0,"k_mg_100g":79.0,"mg_mg_100g":7.0,"p_mg_100g":85.0,"isPowder":false,"tags":["formula","toddler"]},
 {"name":"Enfamil, Nutramigen AA, ready-to-feed","kcal_100g":66.0,"k_mg_100g":72.0,"mg_mg_100g":7.0,"p_mg_100g":34.0,"isPowder":false,"tags":["formula"]},
 {"name":"Enfamil, Premature, with iron, 20 calories, ready-to-feed","kcal_100g":63.0,"k_mg_100g":64.0,"mg_mg_100g":6.0,"p_mg_100g":59.0,"isPowder":false,"tags":["formula"]},
 {"name":"Enfamil, Premature, with iron, 24 calories, ready-to-feed","kcal_100g":81.0,"k_mg_100g":76.0,"mg_mg_100g":7.0,"p_mg_100g":70.0,"isPowder":false,"tags":["formula"]},
-{"name":"Gerber, Good Start 2, Protect Plus, ready-to-feed","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":25.0,"isPowder":false,"tags":["formula"]},
+{"name":"Gerber, Good start 2, Protect plus, ready-to-feed","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":25.0,"isPowder":false,"tags":["formula"]},
 {"name":"Similac, GO And Grow, ready-to-feed, with Ara and Dha","kcal_100g":66.0,"k_mg_100g":98.0,"mg_mg_100g":6.0,"p_mg_100g":85.0,"isPowder":false,"tags":["formula"]},
 {"name":"Similac, Expert Care, Diarrhea, ready- to- feed with Ara and Dha","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":49.0,"isPowder":false,"tags":["formula"]},
 {"name":"Similac, For Spit Up, ready-to-feed, with Ara and Dha","kcal_100g":66.0,"k_mg_100g":70.0,"mg_mg_100g":4.0,"p_mg_100g":37.0,"isPowder":false,"tags":["formula"]},
-{"name":"Snack, Gerber, Graduates, Lil Crunchies, baked whole grain corn snack","kcal_100g":503.0,"k_mg_100g":214.0,"mg_mg_100g":69.0,"p_mg_100g":1044.0,"isPowder":false,"tags":[]},
-{"name":"Similac, For Spit Up, powder, with Ara and Dha","kcal_100g":514.0,"k_mg_100g":550.0,"mg_mg_100g":31.0,"p_mg_100g":288.0,"isPowder":true,"tags":["formula"]},
+{"name":"Snack, Gerber, Graduates, Lil crunchies, baked whole grain corn snack","kcal_100g":503.0,"k_mg_100g":214.0,"mg_mg_100g":69.0,"p_mg_100g":1044.0,"isPowder":false,"tags":[]},
+{"name":"Similac, For Spit Up, powder, with Ara and Dha","kcal_100g":66.0,"k_mg_100g":70.6,"mg_mg_100g":4.0,"p_mg_100g":37.0,"isPowder":true,"tags":["formula"]},
 {"name":"Meat, beef, junior","kcal_100g":81.0,"k_mg_100g":187.0,"mg_mg_100g":11.0,"p_mg_100g":93.0,"isPowder":false,"tags":["meat"]},
 {"name":"Meat, veal, strained","kcal_100g":81.0,"k_mg_100g":170.0,"mg_mg_100g":11.0,"p_mg_100g":98.0,"isPowder":false,"tags":["meat"]},
 {"name":"Meat, pork, strained","kcal_100g":124.0,"k_mg_100g":223.0,"mg_mg_100g":10.0,"p_mg_100g":94.0,"isPowder":false,"tags":["meat"]},
@@ -229,9 +229,9 @@ const BABY_FOODS = [
 {"name":"Dinner, broccoli and chicken, junior","kcal_100g":62.0,"k_mg_100g":170.0,"mg_mg_100g":12.0,"p_mg_100g":58.0,"isPowder":false,"tags":["meat","dinner"]},
 {"name":"Enfamil Premature High Protein 24 Calories, ready to feed, with Ara and Dha","kcal_100g":81.0,"k_mg_100g":77.0,"mg_mg_100g":7.0,"p_mg_100g":70.0,"isPowder":false,"tags":["formula"]},
 {"name":"Enfamil Premature 30 Calories, ready to feed, with Ara and Dha","kcal_100g":101.0,"k_mg_100g":95.0,"mg_mg_100g":9.0,"p_mg_100g":87.0,"isPowder":false,"tags":["formula"]},
-{"name":"Enfamil for Supplementing, powder, with Ara and Dha, not reconstituted","kcal_100g":513.0,"k_mg_100g":550.0,"mg_mg_100g":41.0,"p_mg_100g":230.0,"isPowder":true,"tags":["formula"]},
-{"name":"Enfamil Reguline Powder, with Ara and Dha, not reconstituted","kcal_100g":513.0,"k_mg_100g":550.0,"mg_mg_100g":41.0,"p_mg_100g":230.0,"isPowder":true,"tags":["formula"]},
-{"name":"Pregestimil 24 Calories, ready to feed, with Ara and Dha","kcal_100g":72.0,"k_mg_100g":86.0,"mg_mg_100g":6.0,"p_mg_100g":41.0,"isPowder":false,"tags":[]},
+{"name":"Enfamil for Supplementing, powder, with Ara and Dha, not reconstituted","kcal_100g":68.0,"k_mg_100g":72.9,"mg_mg_100g":5.4,"p_mg_100g":30.5,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil Reguline Powder, with Ara and Dha, not reconstituted","kcal_100g":68.0,"k_mg_100g":72.9,"mg_mg_100g":5.4,"p_mg_100g":30.5,"isPowder":true,"tags":["formula"]},
+{"name":"Pregestimil 24 Calories, ready to feed, with Ara and Dha","kcal_100g":72.0,"k_mg_100g":86.0,"mg_mg_100g":6.0,"p_mg_100g":41.0,"isPowder":false,"tags":["formula"]},
 {"name":"Toddler drink, PurAmino Toddler Powder, with Ara and Dha, not reconstituted","kcal_100g":512.0,"k_mg_100g":550.0,"mg_mg_100g":55.0,"p_mg_100g":260.0,"isPowder":true,"tags":["toddler"]},
 {"name":"Enfamil for Supplementing, ready to feed, with Ara and Dha","kcal_100g":68.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":30.0,"isPowder":false,"tags":["formula"]},
 {"name":"Cereal, barley, prepared with whole milk","kcal_100g":84.0,"k_mg_100g":151.0,"mg_mg_100g":18.0,"p_mg_100g":110.0,"isPowder":false,"tags":["cereal"]},
@@ -239,30 +239,30 @@ const BABY_FOODS = [
 {"name":"Cereal, oatmeal, with honey, prepared with whole milk","kcal_100g":115.0,"k_mg_100g":170.0,"mg_mg_100g":35.0,"p_mg_100g":198.0,"isPowder":false,"tags":["cereal"]},
 {"name":"Cereal, rice, prepared with whole milk","kcal_100g":85.0,"k_mg_100g":151.0,"mg_mg_100g":25.0,"p_mg_100g":122.0,"isPowder":false,"tags":["cereal"]},
 {"name":"Cereal, rice, with honey, prepared with whole milk","kcal_100g":115.0,"k_mg_100g":141.0,"mg_mg_100g":45.0,"p_mg_100g":181.0,"isPowder":false,"tags":["cereal"]},
-{"name":"Enfamil, with iron, powder","kcal_100g":520.0,"k_mg_100g":560.0,"mg_mg_100g":41.0,"p_mg_100g":270.0,"isPowder":true,"tags":["formula"]},
-{"name":"Enfamil, Infant, with iron, powder, with Ara and Dha","kcal_100g":511.0,"k_mg_100g":560.0,"mg_mg_100g":41.0,"p_mg_100g":270.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, with iron, powder","kcal_100g":67,"k_mg_100g":72.2,"mg_mg_100g":5.3,"p_mg_100g":34.8,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Infant, with iron, powder, with Ara and Dha","kcal_100g":68.0,"k_mg_100g":74.5,"mg_mg_100g":5.5,"p_mg_100g":35.9,"isPowder":true,"tags":["formula"]},
 {"name":"Enfamil, Infant, with iron, liquid concentrate, with Ara and Dha, reconstit","kcal_100g":68.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":28.0,"isPowder":false,"tags":["formula"]},
 {"name":"Enfamil Lipil, with iron, ready-to-feed, with Ara and Dha","kcal_100g":64.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":35.0,"isPowder":false,"tags":["formula"]},
 {"name":"Enfamil, Lipil, low iron, ready to feed, with Ara and Dha","kcal_100g":64.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":35.0,"isPowder":false,"tags":["formula"]},
 {"name":"Enfamil, Infant, ready-to-feed, with Ara and Dha","kcal_100g":68.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":28.0,"isPowder":false,"tags":["formula"]},
-{"name":"Similac, PM 60/40, powder not reconstituted","kcal_100g":524.0,"k_mg_100g":411.0,"mg_mg_100g":31.0,"p_mg_100g":144.0,"isPowder":true,"tags":["formula"]},
-{"name":"Enfamil, Nutramigen With Lgg, with iron, powder, not reconstituted, with Ar","kcal_100g":514.0,"k_mg_100g":560.0,"mg_mg_100g":40.0,"p_mg_100g":260.0,"isPowder":true,"tags":["formula"]},
+{"name":"Similac, PM 60/40, powder not reconstituted","kcal_100g":67,"k_mg_100g":52.6,"mg_mg_100g":4.0,"p_mg_100g":18.4,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Nutramigen With Lgg, with iron, powder, not reconstituted, with Ar","kcal_100g":67,"k_mg_100g":73.0,"mg_mg_100g":5.2,"p_mg_100g":33.9,"isPowder":true,"tags":["formula"]},
 {"name":"Enfamil, Nutramigen, with iron, ready-to-feed, with Ara and Dha","kcal_100g":68.0,"k_mg_100g":72.0,"mg_mg_100g":5.0,"p_mg_100g":34.0,"isPowder":false,"tags":["formula"]},
 {"name":"Similac, Alimentum, with iron, ready-to-feed","kcal_100g":66.0,"k_mg_100g":77.0,"mg_mg_100g":5.0,"p_mg_100g":49.0,"isPowder":false,"tags":["formula"]},
-{"name":"Enfamil, Enfacare, with iron, powder, with Ara and Dha","kcal_100g":505.0,"k_mg_100g":520.0,"mg_mg_100g":40.0,"p_mg_100g":330.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Enfacare, with iron, powder, with Ara and Dha","kcal_100g":67,"k_mg_100g":69.0,"mg_mg_100g":5.3,"p_mg_100g":43.8,"isPowder":true,"tags":["formula"]},
 {"name":"Similac, with iron, liquid concentrate, not reconstituted","kcal_100g":127.0,"k_mg_100g":134.0,"mg_mg_100g":8.0,"p_mg_100g":54.0,"isPowder":false,"tags":["formula"]},
-{"name":"Child Pediasure, ready-to-feed","kcal_100g":99.0,"k_mg_100g":125.0,"mg_mg_100g":19.0,"p_mg_100g":76.0,"isPowder":false,"tags":[]},
-{"name":"Next Step, Prosobee Lipil, powder, with Ara and Dha","kcal_100g":480.0,"k_mg_100g":570.0,"mg_mg_100g":52.0,"p_mg_100g":620.0,"isPowder":true,"tags":[]},
-{"name":"Next Step, Prosobee, Lipil, ready to feed, with Ara and Dha","kcal_100g":67.0,"k_mg_100g":79.0,"mg_mg_100g":7.0,"p_mg_100g":85.0,"isPowder":false,"tags":[]},
-{"name":"Good Start Soy, with Ara and Dha, powder","kcal_100g":503.0,"k_mg_100g":581.0,"mg_mg_100g":55.0,"p_mg_100g":316.0,"isPowder":true,"tags":["formula"]},
+{"name":"Child Pediasure, ready-to-feed","kcal_100g":99.0,"k_mg_100g":125.0,"mg_mg_100g":19.0,"p_mg_100g":76.0,"isPowder":false,"tags":["formula"]},
+{"name":"Next Step, Prosobee Lipil, powder, with Ara and Dha","kcal_100g":67,"k_mg_100g":79.6,"mg_mg_100g":7.3,"p_mg_100g":86.5,"isPowder":true,"tags":["formula"]},
+{"name":"Next Step, Prosobee, Lipil, ready to feed, with Ara and Dha","kcal_100g":67.0,"k_mg_100g":79.0,"mg_mg_100g":7.0,"p_mg_100g":85.0,"isPowder":false,"tags":["formula"]},
+{"name":"Good start Soy, with Ara and Dha, powder","kcal_100g":67,"k_mg_100g":77.4,"mg_mg_100g":7.3,"p_mg_100g":42.1,"isPowder":true,"tags":["formula"]},
 {"name":"Corn and sweet potatoes, strained","kcal_100g":68.0,"k_mg_100g":154.0,"mg_mg_100g":10.0,"p_mg_100g":29.0,"isPowder":false,"tags":[]},
 {"name":"Similac, Alimentum, Advance, ready-to-feed, with Ara and Dha","kcal_100g":67.0,"k_mg_100g":77.0,"mg_mg_100g":5.0,"p_mg_100g":49.0,"isPowder":false,"tags":["formula"]},
 {"name":"Store brand, ready-to-feed","kcal_100g":63.0,"k_mg_100g":55.0,"mg_mg_100g":5.0,"p_mg_100g":28.0,"isPowder":false,"tags":[]},
 {"name":"Store brand, liquid concentrate, not reconstituted","kcal_100g":130.0,"k_mg_100g":109.0,"mg_mg_100g":9.0,"p_mg_100g":55.0,"isPowder":false,"tags":[]},
 {"name":"Enfamil, AR, ready-to-feed, with Ara and Dha","kcal_100g":71.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":35.0,"isPowder":false,"tags":["formula"]},
-{"name":"Enfamil, AR, powder, with Ara and Dha","kcal_100g":504.0,"k_mg_100g":540.0,"mg_mg_100g":40.0,"p_mg_100g":260.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, AR, powder, with Ara and Dha","kcal_100g":71.0,"k_mg_100g":76.1,"mg_mg_100g":5.6,"p_mg_100g":36.6,"isPowder":true,"tags":["formula"]},
 {"name":"Similac Neosure, ready-to-feed, with Ara and Dha","kcal_100g":69.0,"k_mg_100g":97.0,"mg_mg_100g":6.0,"p_mg_100g":42.0,"isPowder":false,"tags":["formula"]},
-{"name":"Similac, Neosure, powder, with Ara and Dha","kcal_100g":520.0,"k_mg_100g":731.0,"mg_mg_100g":46.0,"p_mg_100g":319.0,"isPowder":true,"tags":["formula"]},
+{"name":"Similac, Neosure, powder, with Ara and Dha","kcal_100g":67,"k_mg_100g":94.2,"mg_mg_100g":5.9,"p_mg_100g":41.1,"isPowder":true,"tags":["formula"]},
 {"name":"Similac, Sensitive (Lactose Free) ready-to-feed, with Ara and Dha","kcal_100g":68.0,"k_mg_100g":74.0,"mg_mg_100g":3.0,"p_mg_100g":39.0,"isPowder":false,"tags":["formula"]},
 {"name":"Similac, Advance, with iron, liquid concentrate, not reconstituted","kcal_100g":127.0,"k_mg_100g":134.0,"mg_mg_100g":8.0,"p_mg_100g":54.0,"isPowder":false,"tags":["formula"]},
 {"name":"Clif Z bar","kcal_100g":416.0,"k_mg_100g":333.0,"mg_mg_100g":82.0,"p_mg_100g":244.0,"isPowder":false,"tags":[]},
@@ -311,11 +311,11 @@ const BABY_FOODS = [
 {"name":"Snack, Gerber, Graduates, Yogurt Melts","kcal_100g":380.0,"k_mg_100g":714.0,"mg_mg_100g":53.0,"p_mg_100g":382.0,"isPowder":false,"tags":["dessert"]},
 {"name":"Dinner, sweet potatoes and chicken, strained","kcal_100g":74.0,"k_mg_100g":200.0,"mg_mg_100g":13.0,"p_mg_100g":25.0,"isPowder":false,"tags":["meat","dinner"]},
 {"name":"Enfamil 24, ready to feed, with Ara and Dha","kcal_100g":71.0,"k_mg_100g":84.0,"mg_mg_100g":6.0,"p_mg_100g":34.0,"isPowder":false,"tags":["formula"]},
-{"name":"Enfamil Enspire Powder, with Ara and Dha, not reconstituted","kcal_100g":514.0,"k_mg_100g":540.0,"mg_mg_100g":40.0,"p_mg_100g":220.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil Enspire Powder, with Ara and Dha, not reconstituted","kcal_100g":67,"k_mg_100g":70.4,"mg_mg_100g":5.2,"p_mg_100g":28.7,"isPowder":true,"tags":["formula"]},
 {"name":"Enfamil Reguline, ready to feed, with Ara and Dha","kcal_100g":68.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":30.0,"isPowder":false,"tags":["formula"]},
-{"name":"Gentlease, ready to feed, with Ara and Dha","kcal_100g":68.0,"k_mg_100g":84.0,"mg_mg_100g":5.0,"p_mg_100g":34.0,"isPowder":false,"tags":[]},
-{"name":"Toddler Nutramigen Toddler with Lgg Powder, with Ara and Dha, not reconstit","kcal_100g":485.0,"k_mg_100g":590.0,"mg_mg_100g":48.0,"p_mg_100g":350.0,"isPowder":true,"tags":["formula","toddler"]},
-{"name":"Pregestimil 20 Calories, ready to feed, with Ara and Dha","kcal_100g":69.0,"k_mg_100g":72.0,"mg_mg_100g":5.0,"p_mg_100g":34.0,"isPowder":false,"tags":[]},
+{"name":"Gentlease, ready to feed, with Ara and Dha","kcal_100g":68.0,"k_mg_100g":84.0,"mg_mg_100g":5.0,"p_mg_100g":34.0,"isPowder":false,"tags":["formula"]},
+{"name":"Toddler Nutramigen Toddler with Lgg Powder, with Ara and Dha, not reconstit","kcal_100g":67,"k_mg_100g":81.5,"mg_mg_100g":6.6,"p_mg_100g":48.4,"isPowder":true,"tags":["formula","toddler"]},
+{"name":"Pregestimil 20 Calories, ready to feed, with Ara and Dha","kcal_100g":69.0,"k_mg_100g":72.0,"mg_mg_100g":5.0,"p_mg_100g":34.0,"isPowder":false,"tags":["formula"]},
 {"name":"Cereal, high protein, prepared with whole milk","kcal_100g":111.0,"k_mg_100g":349.0,"mg_mg_100g":48.0,"p_mg_100g":177.0,"isPowder":false,"tags":["cereal"]},
 {"name":"Cereal, mixed, prepared with whole milk","kcal_100g":96.0,"k_mg_100g":166.0,"mg_mg_100g":20.0,"p_mg_100g":118.0,"isPowder":false,"tags":["cereal"]},
 {"name":"Cereal, mixed, with bananas, prepared with whole milk","kcal_100g":86.0,"k_mg_100g":178.0,"mg_mg_100g":18.0,"p_mg_100g":111.0,"isPowder":false,"tags":["cereal"]},
@@ -323,39 +323,37 @@ const BABY_FOODS = [
 {"name":"Cereal, mixed, with honey, prepared with whole milk","kcal_100g":115.0,"k_mg_100g":171.0,"mg_mg_100g":28.0,"p_mg_100g":184.0,"isPowder":false,"tags":["cereal"]},
 {"name":"Cereal, high protein, with apple and orange, prepared with whole milk","kcal_100g":112.0,"k_mg_100g":346.0,"mg_mg_100g":37.0,"p_mg_100g":166.0,"isPowder":false,"tags":["cereal"]},
 {"name":"Cereal, rice, with bananas, prepared with whole milk","kcal_100g":86.0,"k_mg_100g":180.0,"mg_mg_100g":20.0,"p_mg_100g":109.0,"isPowder":false,"tags":["cereal"]},
-{"name":"Good Start Supreme, with iron, liquid concentrate, not reconstituted","kcal_100g":127.0,"k_mg_100g":137.0,"mg_mg_100g":9.0,"p_mg_100g":46.0,"isPowder":false,"tags":["formula"]},
-{"name":"Good Start Supreme, with iron, powder","kcal_100g":509.0,"k_mg_100g":553.0,"mg_mg_100g":36.0,"p_mg_100g":184.0,"isPowder":true,"tags":["formula"]},
+{"name":"Good start Supreme, with iron, liquid concentrate, not reconstituted","kcal_100g":127.0,"k_mg_100g":137.0,"mg_mg_100g":9.0,"p_mg_100g":46.0,"isPowder":false,"tags":["formula"]},
+{"name":"Good start Supreme, with iron, powder","kcal_100g":127.0,"k_mg_100g":138.0,"mg_mg_100g":9.0,"p_mg_100g":45.9,"isPowder":true,"tags":["formula"]},
 {"name":"Enfamil, Lipil, low iron, liquid concentrate, with Ara and Dha","kcal_100g":131.0,"k_mg_100g":142.0,"mg_mg_100g":11.0,"p_mg_100g":70.0,"isPowder":false,"tags":["formula"]},
-{"name":"Pregestimil, with iron, powder, with Ara and Dha, not reconstituted","kcal_100g":517.0,"k_mg_100g":550.0,"mg_mg_100g":40.0,"p_mg_100g":260.0,"isPowder":true,"tags":[]},
-{"name":"Pregestimil, with iron, with Ara and Dha, prepared from powder","kcal_100g":67.0,"k_mg_100g":73.0,"mg_mg_100g":5.0,"p_mg_100g":34.0,"isPowder":true,"tags":[]},
-{"name":"Prosobee, with iron, ready-to-feed","kcal_100g":63.0,"k_mg_100g":79.0,"mg_mg_100g":7.0,"p_mg_100g":54.0,"isPowder":false,"tags":[]},
+{"name":"Pregestimil, with iron, powder, with Ara and Dha, not reconstituted","kcal_100g":67,"k_mg_100g":71.3,"mg_mg_100g":5.2,"p_mg_100g":33.7,"isPowder":true,"tags":["formula"]},
+{"name":"Pregestimil, with iron, with Ara and Dha, prepared from powder","kcal_100g":67.0,"k_mg_100g":73.0,"mg_mg_100g":5.0,"p_mg_100g":34.0,"isPowder":true,"tags":["formula"]},
+{"name":"Prosobee, with iron, ready-to-feed","kcal_100g":63.0,"k_mg_100g":79.0,"mg_mg_100g":7.0,"p_mg_100g":54.0,"isPowder":false,"tags":["formula"]},
 {"name":"Similac, Isomil, with iron, ready-to-feed","kcal_100g":66.0,"k_mg_100g":71.0,"mg_mg_100g":5.0,"p_mg_100g":49.0,"isPowder":false,"tags":["formula"]},
 {"name":"Similac, Isomil, with iron, liquid concentrate","kcal_100g":128.0,"k_mg_100g":138.0,"mg_mg_100g":10.0,"p_mg_100g":96.0,"isPowder":false,"tags":["formula"]},
-{"name":"Similac, Isomil, with iron, powder, not reconstituted","kcal_100g":517.0,"k_mg_100g":555.0,"mg_mg_100g":39.0,"p_mg_100g":386.0,"isPowder":true,"tags":["formula"]},
+{"name":"Similac, Isomil, with iron, powder, not reconstituted","kcal_100g":66.0,"k_mg_100g":70.9,"mg_mg_100g":5.0,"p_mg_100g":49.3,"isPowder":true,"tags":["formula"]},
 {"name":"Enfamil, Nutramigen, with iron, liquid concentrate not reconstituted, with ","kcal_100g":68.0,"k_mg_100g":72.0,"mg_mg_100g":5.0,"p_mg_100g":34.0,"isPowder":false,"tags":["formula"]},
-{"name":"Enfamil, Prosobee, with iron, powder, not reconstituted, with Ara and Dha","kcal_100g":512.0,"k_mg_100g":610.0,"mg_mg_100g":41.0,"p_mg_100g":350.0,"isPowder":true,"tags":["formula"]},
-{"name":"Similac, with iron, powder, not reconstituted","kcal_100g":522.0,"k_mg_100g":552.0,"mg_mg_100g":32.0,"p_mg_100g":221.0,"isPowder":true,"tags":["formula"]},
+{"name":"Enfamil, Prosobee, with iron, powder, not reconstituted, with Ara and Dha","kcal_100g":67,"k_mg_100g":79.8,"mg_mg_100g":5.4,"p_mg_100g":45.8,"isPowder":true,"tags":["formula"]},
+{"name":"Similac, with iron, powder, not reconstituted","kcal_100g":127.0,"k_mg_100g":134.3,"mg_mg_100g":7.8,"p_mg_100g":53.8,"isPowder":true,"tags":["formula"]},
 {"name":"Enfamil, Prosobee, liquid concentrate, reconstituted, with Ara and Dha","kcal_100g":67.0,"k_mg_100g":78.0,"mg_mg_100g":5.0,"p_mg_100g":45.0,"isPowder":false,"tags":["formula"]},
-{"name":"Prosobee, with iron, ready to feed, with Ara and Dha","kcal_100g":64.0,"k_mg_100g":79.0,"mg_mg_100g":5.0,"p_mg_100g":45.0,"isPowder":false,"tags":[]},
-{"name":"Good Start Soy, with Dha and Ara, ready-to-feed","kcal_100g":64.0,"k_mg_100g":74.0,"mg_mg_100g":7.0,"p_mg_100g":41.0,"isPowder":false,"tags":["formula"]},
-{"name":"Child Pediasure, ready-to-feed, with iron and fiber","kcal_100g":99.0,"k_mg_100g":124.0,"mg_mg_100g":19.0,"p_mg_100g":80.0,"isPowder":false,"tags":[]},
-{"name":"Good Start Essentials Soy, with iron, powder","kcal_100g":502.0,"k_mg_100g":581.0,"mg_mg_100g":55.0,"p_mg_100g":316.0,"isPowder":true,"tags":["formula"]},
-{"name":"Next Step Prosobee, powder, not reconstituted","kcal_100g":480.0,"k_mg_100g":570.0,"mg_mg_100g":52.0,"p_mg_100g":620.0,"isPowder":true,"tags":[]},
-{"name":"Next Step Prosobee, prepared from powder","kcal_100g":67.0,"k_mg_100g":79.0,"mg_mg_100g":7.0,"p_mg_100g":85.0,"isPowder":true,"tags":[]},
-{"name":"Store brand, powder","kcal_100g":524.0,"k_mg_100g":441.0,"mg_mg_100g":36.0,"p_mg_100g":221.0,"isPowder":true,"tags":[]},
+{"name":"Prosobee, with iron, ready to feed, with Ara and Dha","kcal_100g":64.0,"k_mg_100g":79.0,"mg_mg_100g":5.0,"p_mg_100g":45.0,"isPowder":false,"tags":["formula"]},
+{"name":"Good start Soy, with Dha and Ara, ready-to-feed","kcal_100g":64.0,"k_mg_100g":74.0,"mg_mg_100g":7.0,"p_mg_100g":41.0,"isPowder":false,"tags":["formula"]},
+{"name":"Child Pediasure, ready-to-feed, with iron and fiber","kcal_100g":99.0,"k_mg_100g":124.0,"mg_mg_100g":19.0,"p_mg_100g":80.0,"isPowder":false,"tags":["formula"]},
+{"name":"Good start Essentials Soy, with iron, powder","kcal_100g":67,"k_mg_100g":77.5,"mg_mg_100g":7.3,"p_mg_100g":42.2,"isPowder":true,"tags":["formula"]},
+{"name":"Next Step Prosobee, powder, not reconstituted","kcal_100g":67,"k_mg_100g":79.6,"mg_mg_100g":7.3,"p_mg_100g":86.5,"isPowder":true,"tags":["formula"]},
+{"name":"Next Step Prosobee, prepared from powder","kcal_100g":67.0,"k_mg_100g":79.0,"mg_mg_100g":7.0,"p_mg_100g":85.0,"isPowder":true,"tags":["formula"]},
+{"name":"Store brand, powder","kcal_100g":63.0,"k_mg_100g":53.0,"mg_mg_100g":4.3,"p_mg_100g":26.6,"isPowder":true,"tags":[]},
 {"name":"Store brand, soy, ready-to-feed","kcal_100g":63.0,"k_mg_100g":69.0,"mg_mg_100g":7.0,"p_mg_100g":41.0,"isPowder":false,"tags":[]},
 {"name":"Store brand, soy, liquid concentrate, not reconstituted","kcal_100g":126.0,"k_mg_100g":138.0,"mg_mg_100g":14.0,"p_mg_100g":82.0,"isPowder":false,"tags":[]},
-{"name":"Store brand, soy, powder","kcal_100g":508.0,"k_mg_100g":528.0,"mg_mg_100g":51.0,"p_mg_100g":317.0,"isPowder":true,"tags":[]},
+{"name":"Store brand, soy, powder","kcal_100g":63.0,"k_mg_100g":65.5,"mg_mg_100g":6.3,"p_mg_100g":39.3,"isPowder":true,"tags":[]},
 {"name":"Similac, Sensitive, (Lactose Free), liquid concentrate, with Ara and Dha","kcal_100g":128.0,"k_mg_100g":138.0,"mg_mg_100g":8.0,"p_mg_100g":72.0,"isPowder":false,"tags":["formula"]},
-{"name":"Similac, Sensitive, (Lactose Free), powder, with Ara and Dha","kcal_100g":520.0,"k_mg_100g":557.0,"mg_mg_100g":30.0,"p_mg_100g":293.0,"isPowder":true,"tags":["formula"]},
+{"name":"Similac, Sensitive, (Lactose Free), powder, with Ara and Dha","kcal_100g":128.0,"k_mg_100g":137.1,"mg_mg_100g":7.4,"p_mg_100g":72.1,"isPowder":true,"tags":["formula"]},
 {"name":"Similac, Advance, with iron, ready-to-feed","kcal_100g":66.0,"k_mg_100g":69.0,"mg_mg_100g":4.0,"p_mg_100g":28.0,"isPowder":false,"tags":["formula"]},
-{"name":"Similac, Advance, with iron, powder, not reconstituted","kcal_100g":522.0,"k_mg_100g":552.0,"mg_mg_100g":32.0,"p_mg_100g":221.0,"isPowder":true,"tags":["formula"]}
+{"name":"Similac, Advance, with iron, powder, not reconstituted","kcal_100g":66.0,"k_mg_100g":69.8,"mg_mg_100g":4.0,"p_mg_100g":27.9,"isPowder":true,"tags":["formula"]}
 ];
 
-// ── Search foods by name fragment (case-insensitive), also matches tags ───
 function searchBabyFoods(query) {
   if (!query || query.trim() === "") {
-    // Show preferred formulas pinned at top
     var prefs = settingsPreferredFormulas();
     var pinned = [];
     if (prefs.length) {
@@ -364,9 +362,7 @@ function searchBabyFoods(query) {
         if (f) pinned.push(f);
       });
     }
-    var rest = BABY_FOODS.filter(function(f) {
-      return pinned.indexOf(f) === -1;
-    }).slice(0, 60 - pinned.length);
+    var rest = BABY_FOODS.filter(function(f) { return pinned.indexOf(f) === -1; }).slice(0, 60 - pinned.length);
     return pinned.concat(rest);
   }
   var q = query.toLowerCase();
@@ -376,7 +372,6 @@ function searchBabyFoods(query) {
   }).slice(0, 40);
 }
 
-// ── Get a food by exact name ──────────────────────────────────────────────
 function babyFoodByName(name) {
   for (var i = 0; i < BABY_FOODS.length; i++) {
     if (BABY_FOODS[i].name === name) return BABY_FOODS[i];
@@ -384,88 +379,58 @@ function babyFoodByName(name) {
   return null;
 }
 
-// ── Feeding amount calculator (with daily electrolyte totals) ─────────────
 function calcFeedingAmount(food, targetKcalPerDay, frequency) {
   if (!food || !isFinite(targetKcalPerDay) || targetKcalPerDay <= 0) return null;
   if (!frequency || frequency < 1) frequency = 3;
-
   var kcalPerG = food.kcal_100g / 100;
   var gramsPerDay = targetKcalPerDay / kcalPerG;
   var gramsPerFeed = gramsPerDay / frequency;
   var ozPerFeed = gramsPerFeed / 28.35;
   var mLPerFeed = gramsPerFeed;
-
   var freqLabels = {3: "TID", 4: "QID", 6: "q4h", 8: "q3h", 12: "q2h"};
   var freqLabel = freqLabels[frequency] || ("q" + Math.round(24/frequency) + "h x " + frequency);
-
-  // Daily electrolyte totals (mg/day) from the grams fed
   var result = {
-    foodName: food.name,
-    kcalPer100g: food.kcal_100g,
-    isPowder: !!food.isPowder,
-    targetKcalPerDay: Math.round(targetKcalPerDay),
-    frequency: frequency,
-    frequencyLabel: freqLabel,
-    gramsPerDay: Math.round(gramsPerDay),
-    gramsPerFeed: Math.round(gramsPerFeed),
-    ozPerFeed: ozPerFeed,
+    foodName: food.name, kcalPer100g: food.kcal_100g, isPowder: !!food.isPowder,
+    targetKcalPerDay: Math.round(targetKcalPerDay), frequency: frequency,
+    frequencyLabel: freqLabel, gramsPerDay: Math.round(gramsPerDay),
+    gramsPerFeed: Math.round(gramsPerFeed), ozPerFeed: ozPerFeed,
     ozPerFeedRounded: ozPerFeed < 1 ? ozPerFeed.toFixed(1) : (Math.round(ozPerFeed) || "1"),
     mLPerFeed: Math.round(mLPerFeed)
   };
-
-  // Daily electrolyte totals in mg
-  if (isFinite(food.k_mg_100g))
-    result.kMgPerDay = Math.round(gramsPerDay * food.k_mg_100g / 100);
-  if (isFinite(food.mg_mg_100g))
-    result.mgMgPerDay = Math.round(gramsPerDay * food.mg_mg_100g / 100);
-  if (isFinite(food.p_mg_100g))
-    result.pMgPerDay = Math.round(gramsPerDay * food.p_mg_100g / 100);
-
+  if (isFinite(food.k_mg_100g)) result.kMgPerDay = Math.round(gramsPerDay * food.k_mg_100g / 100);
+  if (isFinite(food.mg_mg_100g)) result.mgMgPerDay = Math.round(gramsPerDay * food.mg_mg_100g / 100);
+  if (isFinite(food.p_mg_100g)) result.pMgPerDay = Math.round(gramsPerDay * food.p_mg_100g / 100);
   return result;
 }
 
-// ── Render feeding amount as HTML (with electrolytes) ─────────────────────
 function renderFeedingAmount(result) {
   if (!result) return "";
-  var h = '<p><strong>' + escapeHtml(result.foodName) + '</strong> — ' +
-    result.kcalPer100g + ' kcal/100g';
+  var h = '<p><strong>' + escapeHtml(result.foodName) + '</strong> \u2014 ' + result.kcalPer100g + ' kcal/100g';
   if (result.isPowder) h += ' <span class="badge muted">powder</span>';
-  h += '</p>';
-  h += '<p>To meet <strong>' + result.targetKcalPerDay + ' kcal/day</strong> (' + result.frequencyLabel + '):</p>';
+  h += '</p><p>To meet <strong>' + result.targetKcalPerDay + ' kcal/day</strong> (' + result.frequencyLabel + '):</p>';
   h += '<ul style="font-size:.85rem;margin-bottom:.35rem">';
   h += '<li>' + result.gramsPerFeed + ' g per feed (' + result.gramsPerDay + ' g/day)</li>';
   h += '<li>' + result.ozPerFeedRounded + ' oz per feed</li>';
-  h += '<li>' + result.mLPerFeed + ' mL per feed</li>';
-  h += '</ul>';
-
-  // Electrolyte totals
+  h += '<li>' + result.mLPerFeed + ' mL per feed</li></ul>';
   var elec = [];
   if (isFinite(result.kMgPerDay)) elec.push('K ' + result.kMgPerDay + ' mg/day');
   if (isFinite(result.mgMgPerDay)) elec.push('Mg ' + result.mgMgPerDay + ' mg/day');
   if (isFinite(result.pMgPerDay)) elec.push('P ' + result.pMgPerDay + ' mg/day');
-  if (elec.length) {
-    h += '<p style="font-size:.8rem;margin:0;color:var(--muted)">Daily electrolytes: ' + elec.join(', ') + '</p>';
-  }
-
-  if (result.isPowder) {
-    h += '<p class="disclaimer" style="font-size:.7rem;margin-top:.2rem">Powder — reconstitute per label. Amounts shown are for prepared formula.</p>';
-  }
+  if (elec.length) h += '<p style="font-size:.8rem;margin:0;color:var(--muted)">Daily electrolytes: ' + elec.join(', ') + '</p>';
+  if (result.isPowder) h += '<p class="disclaimer" style="font-size:.7rem;margin-top:.2rem">Powder \u2014 amounts shown are for prepared formula (kcal normalized).</p>';
   return h;
 }
 
-// ── Build a one-line feeding plan string for the EMR note ─────────────────
 function feedingPlanString(food, targetKcalPerDay, frequency) {
   if (!food) return null;
   if (!isFinite(targetKcalPerDay) || targetKcalPerDay <= 0) {
-    // No kcal target available — show food name + frequency only
     var freqLabels = {3: "TID", 4: "QID", 6: "q4h", 8: "q3h", 12: "q2h"};
     var fl = freqLabels[frequency || 3] || ("q" + Math.round(24/(frequency||3)) + "h");
-    return food.name + " (" + fl + ") — kcal target needed for amounts";
+    return food.name + " (" + fl + ") \u2014 kcal target needed for amounts";
   }
   var r = calcFeedingAmount(food, targetKcalPerDay, frequency);
   if (!r) return null;
   var s = r.foodName + ", " + r.ozPerFeedRounded + " oz (" + r.mLPerFeed + " mL) " + r.frequencyLabel;
-  // Append electrolytes if available
   var elec = [];
   if (isFinite(r.kMgPerDay)) elec.push("K " + r.kMgPerDay + " mg");
   if (isFinite(r.mgMgPerDay)) elec.push("Mg " + r.mgMgPerDay + " mg");
